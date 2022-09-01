@@ -1,10 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
 
-// Version is set at build time
-var Version string
+	"github.com/AP-Hunt/what-next/m/cmd"
+)
 
 func main() {
-	fmt.Printf("Running version %s\n", Version)
+	if err := cmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }

@@ -14,7 +14,7 @@ $OUT_PATH: $(GO_SRC) ./vendor/ $(VENDOR_DIRS)
 	@echo "Compiling to ${OUT_PATH}"
 	go build \
 		-o "${OUT_PATH}" \
-		-ldflags="-X 'main.Version=${VERSION}'" \
+		-ldflags="-X 'github.com/AP-Hunt/what-next/m/cmd.Version=${VERSION}'" \
 		.
 
 go.mod:
