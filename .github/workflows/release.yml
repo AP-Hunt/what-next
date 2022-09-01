@@ -1,0 +1,29 @@
+---
+on:
+  push:
+    tags:
+      # Tags that look like a semantic version
+      - "[0-9]+.[0-9]+.[0-9]+*"
+
+name: "Release new version"
+jobs:
+  cut_release:
+    name: "Cut release"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2 # Trusted creator
+      - uses: actions/setup-go@v2 # Trusted creator
+        with:
+          check-latest: true
+          go-version: "^1.17"
+
+      - name: "Compile release"
+        run: make dist
+
+      - name: "Create Github Release"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create --draft --title "v$(cat version)" "$(cat version)" ./release/*
+          echo "Created draft release titled v$(cat version)."
+          echo "You must now go fill in the release notes and publish the release."
