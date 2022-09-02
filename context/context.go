@@ -3,13 +3,13 @@ package context
 import (
 	"context"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/AP-Hunt/what-next/m/todo"
 )
 
 type ContextKey = string
 
 const (
-	CtxDatabaseConnection ContextKey = "DatabaseConnection"
+	CtxTodoRepo ContextKey = "TodoRepo"
 )
 
 type CommandContext struct {
@@ -22,10 +22,10 @@ func NewCommandContext(parentContext context.Context) CommandContext {
 	}
 }
 
-func (ctx *CommandContext) WithDatabaseConnection(conn *sqlx.DB) CommandContext {
-	return CommandContext{context.WithValue(ctx, CtxDatabaseConnection, conn)}
+func (ctx *CommandContext) WithTodoRepository(repo todo.TodoRepositoryInterface) CommandContext {
+	return CommandContext{context.WithValue(ctx, CtxTodoRepo, repo)}
 }
 
-func (ctx *CommandContext) DatabaseConnection() *sqlx.DB {
-	return ctx.Value(CtxDatabaseConnection).(*sqlx.DB)
+func (ctx *CommandContext) TodoRepository() todo.TodoRepositoryInterface {
+	return ctx.Value(CtxTodoRepo).(todo.TodoRepositoryInterface)
 }
