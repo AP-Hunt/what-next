@@ -12,6 +12,7 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(todoCmd)
 }
 
 func ExecuteCWithArgs(ctx CommandContext, args []string) error {
