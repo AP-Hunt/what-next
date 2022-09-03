@@ -18,6 +18,7 @@ func Connect(connectionString string) (*sqlx.DB, error) {
 var embeddedMigrations embed.FS
 
 func Migrate(database *sql.DB) error {
+	goose.SetLogger(goose.NopLogger())
 	goose.SetBaseFS(embeddedMigrations)
 
 	err := goose.SetDialect("sqlite")

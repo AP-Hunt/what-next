@@ -31,9 +31,8 @@ func CreateDefaultCommandContext(parentContext context.Context) (CommandContext,
 }
 
 func initViper() {
-	var homeDir string
-	if d, err := os.UserHomeDir(); err != nil {
-		homeDir = d
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
 		panic(err)
 	}
 
