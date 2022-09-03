@@ -11,6 +11,7 @@ var (
 	ItemNotFoundError = errors.New("not found")
 )
 
+//counterfeiter:generate -o fakes/ . TodoRepositoryInterface
 type TodoRepositoryInterface interface {
 	Add(item TodoItem) (TodoItem, error)
 	Get(id int) (TodoItem, error)
