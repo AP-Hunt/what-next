@@ -14,6 +14,7 @@ var (
 type TodoRepositoryInterface interface {
 	Add(item TodoItem) (TodoItem, error)
 	Get(id int) (TodoItem, error)
+	List() (*TodoItemCollection, error)
 }
 
 type TodoSQLRepository struct {
@@ -76,4 +77,14 @@ func (repo *TodoSQLRepository) Get(id int) (TodoItem, error) {
 	}
 
 	return item, nil
+}
+
+func (repo *TodoSQLRepository) List() (*TodoItemCollection, error) {
+	items := []*TodoItem{}
+	err := repo.conn.Select(&items, "SELECT * FROM todo_items")
+	if err != nil {
+		return NewTodoItemCollection(nil), err
+	}
+
+	return NewTodoItemCollection(items), nil
 }

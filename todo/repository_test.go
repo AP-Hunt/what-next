@@ -9,9 +9,11 @@ import (
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/pressly/goose/v3"
 )
 
 var _ = Describe("Repository", func() {
+	goose.SetLogger(goose.NopLogger())
 	var (
 		inMemoryConn *sqlx.DB
 		repo         *todo.TodoSQLRepository
@@ -64,5 +66,17 @@ var _ = Describe("Repository", func() {
 
 		Expect(retrievedItem).To(Equal(addedItem))
 		Expect(retrievedItem).ToNot(BeIdenticalTo(addedItem))
+	})
+
+	It("can list all existing items", func() {
+		_, err := repo.Add(todo.TodoItem{Action: "Item 1"})
+		Expect(err).ToNot(HaveOccurred())
+
+		_, err = repo.Add(todo.TodoItem{Action: "Item 2"})
+		Expect(err).ToNot(HaveOccurred())
+
+		collection, err := repo.List()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(collection.Len()).To(Equal(2))
 	})
 })
