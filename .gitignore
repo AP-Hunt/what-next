@@ -2,3 +2,4 @@ bin/
 vendor/
 release/
 **/fakes/
+*.sqlite

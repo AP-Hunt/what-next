@@ -34,6 +34,11 @@ go.sum:
 test: ./vendor/
 	go test ./...
 
+## Dev targets
+.PHONY: set-env
+set-env:
+	@echo export WHAT_NEXT_DATA_DIR="$$(pwd)"
+
 ## Versioning targets
 .PHONY: version
 version:
