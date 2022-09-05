@@ -7,7 +7,7 @@ import (
 // Version is set at build time
 var Version string = "dev"
 
-var versionCmd = &cobra.Command{
+var VersionCmd = &cobra.Command{
 	Use: "version",
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Println(Version)

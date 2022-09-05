@@ -7,6 +7,7 @@ import (
 
 	"github.com/AP-Hunt/what-next/m/db"
 	"github.com/AP-Hunt/what-next/m/todo"
+	"github.com/AP-Hunt/what-next/m/views"
 	"github.com/jmoiron/sqlx"
 	"github.com/spf13/viper"
 )
@@ -25,7 +26,9 @@ func CreateDefaultCommandContext(parentContext context.Context) (CommandContext,
 		return CommandContext{}, err
 	}
 
-	ctx = ctx.WithTodoRepository(todo.NewTodoSQLRepository(database, ctx))
+	ctx = ctx.
+		WithTodoRepository(todo.NewTodoSQLRepository(database, ctx)).
+		WithViewEngine(&views.StdOutViewEngine{})
 
 	return ctx, nil
 }

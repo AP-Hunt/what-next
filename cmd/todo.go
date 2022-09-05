@@ -8,6 +8,7 @@ import (
 
 	"github.com/AP-Hunt/what-next/m/context"
 	"github.com/AP-Hunt/what-next/m/todo"
+	"github.com/AP-Hunt/what-next/m/views"
 )
 
 var todoCompletedSymbolMap = map[bool]string{
@@ -15,12 +16,12 @@ var todoCompletedSymbolMap = map[bool]string{
 	false: "x",
 }
 
-var todoCmd = &cobra.Command{
+var TodoRootCmd = &cobra.Command{
 	Use:     "todo",
 	Aliases: []string{"t"},
 }
 
-var todoAddCmd = &cobra.Command{
+var TodoAddCmd = &cobra.Command{
 	Use:     "add item",
 	Aliases: []string{"a"},
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -40,12 +41,15 @@ var todoAddCmd = &cobra.Command{
 			return err
 		}
 
-		cmd.Printf("%-12d [%s] %s\n", addedItem.Id, todoCompletedSymbolMap[addedItem.Completed], addedItem.Action)
-		return nil
+		viewEngine := ctx.ViewEngine()
+		view := views.TodoListView{}
+		view.SetData(todo.NewTodoItemCollection([]*todo.TodoItem{&addedItem}))
+
+		return viewEngine.Draw(&view)
 	},
 }
 
-var todoListCmd = &cobra.Command{
+var TodoListCmd = &cobra.Command{
 	Use:     "list",
 	Aliases: []string{"l"},
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -57,15 +61,15 @@ var todoListCmd = &cobra.Command{
 			return err
 		}
 
-		for _, item := range items.Enumerate() {
-			cmd.Printf("%-12d [%s] %s\n", item.Id, todoCompletedSymbolMap[item.Completed], item.Action)
-		}
+		viewEngine := ctx.ViewEngine()
+		view := views.TodoListView{}
+		view.SetData(items)
 
-		return nil
+		return viewEngine.Draw(&view)
 	},
 }
 
 func init() {
-	todoCmd.AddCommand(todoAddCmd)
-	todoCmd.AddCommand(todoListCmd)
+	TodoRootCmd.AddCommand(TodoAddCmd)
+	TodoRootCmd.AddCommand(TodoListCmd)
 }

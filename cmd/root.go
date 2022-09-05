@@ -5,21 +5,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
+var RootCmd = &cobra.Command{
 	Use:     "what-next",
 	Version: Version,
 }
 
 func init() {
-	rootCmd.AddCommand(versionCmd)
-	rootCmd.AddCommand(todoCmd)
+	RootCmd.AddCommand(VersionCmd)
+	RootCmd.AddCommand(TodoRootCmd)
 }
 
 func ExecuteCWithArgs(ctx CommandContext, args []string) error {
-	rootCmd.SetArgs(args)
-	return rootCmd.ExecuteContext(ctx)
+	RootCmd.SetArgs(args)
+	return RootCmd.ExecuteContext(ctx)
 }
 
 func ExecuteC(ctx CommandContext) error {
-	return rootCmd.ExecuteContext(ctx)
+	return RootCmd.ExecuteContext(ctx)
 }
