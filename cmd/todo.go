@@ -11,11 +11,6 @@ import (
 	"github.com/AP-Hunt/what-next/m/views"
 )
 
-var todoCompletedSymbolMap = map[bool]string{
-	true:  "✓",
-	false: "x",
-}
-
 var TodoRootCmd = &cobra.Command{
 	Use:     "todo",
 	Aliases: []string{"t"},
