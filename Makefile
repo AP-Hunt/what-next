@@ -10,7 +10,7 @@ VERSION_FILE := ./version
 VERSION := $(shell cat "${VERSION_FILE}")
 
 ## Build targets
-$OUT_PATH: $(GO_SRC) ./vendor/ $(VENDOR_DIRS) */fakes/*.go
+$OUT_PATH: $(GO_SRC) fakes ./vendor/ $(VENDOR_DIRS)
 	@echo "Compiling to ${OUT_PATH}"
 	go build \
 		-o "${OUT_PATH}" \
@@ -26,7 +26,7 @@ go.sum:
 ./vendor/: go.mod go.sum
 	go mod vendor
 
-*/fakes/*.go:
+fakes:
 	go generate ./...
 
 ## Test targets
