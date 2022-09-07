@@ -3,11 +3,11 @@ module github.com/AP-Hunt/what-next/m
 go 1.19
 
 require (
+	github.com/arran4/golang-ical v0.0.0-20220517104411-fd89fefb0182
 	github.com/isbm/textwrap v0.0.0-20190729202254-22edad10bd84
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/mattn/go-sqlite3 v1.14.15
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.5.0
-	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/onsi/ginkgo/v2 v2.1.6
 	github.com/onsi/gomega v1.20.2
 	github.com/pressly/goose/v3 v3.7.0

@@ -13,6 +13,7 @@ var RootCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(VersionCmd)
 	RootCmd.AddCommand(TodoRootCmd)
+	RootCmd.AddCommand(CalendarRootCmd)
 }
 
 func ExecuteCWithArgs(ctx CommandContext, args []string) error {
