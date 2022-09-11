@@ -10,10 +10,18 @@ make
 Then run the executable at the path in the output.
 
 ## Developing
+### Environment
 To get a usefully configured environment for running a development version of `what-next`, run
 
 ```
 source <(make set-env)
+```
+
+### Calendar
+To get a minimal ical format calendar with a configurable number of entries, run
+
+```
+make fake-calendar NUM_ENTRIES=12
 ```
 
 ## Testing

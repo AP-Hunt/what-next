@@ -3,3 +3,4 @@ vendor/
 release/
 **/fakes/
 *.sqlite
+*.ical

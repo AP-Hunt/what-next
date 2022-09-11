@@ -17,6 +17,7 @@ require (
 )
 
 require (
+	github.com/brianvoe/gofakeit/v6 v6.18.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect

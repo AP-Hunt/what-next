@@ -39,6 +39,12 @@ test: ./vendor/
 set-env:
 	@echo export WHAT_NEXT_DATA_DIR="$$(pwd)"
 
+.PHONY: fake-calendar
+fake-calendar:
+	@cd tools/ical-generator; go build
+	@./tools/ical-generator/ical-generator "$${NUM_EVENTS:-12}" > fake.ical
+	@echo "Calendar written to fake.ical"
+
 ## Versioning targets
 .PHONY: version
 version:
