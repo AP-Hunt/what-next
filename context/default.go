@@ -30,7 +30,7 @@ func CreateDefaultCommandContext(parentContext context.Context) (CommandContext,
 	ctx = ctx.
 		WithTodoRepository(todo.NewTodoSQLRepository(database, ctx)).
 		WithViewEngine(&views.StdOutViewEngine{}).
-		WithCalendarService(calendar.NewCalendarService())
+		WithCalendarService(calendar.NewCalendarService(database, ctx))
 
 	return ctx, nil
 }

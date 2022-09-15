@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/AP-Hunt/what-next/m/db"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -31,42 +32,31 @@ func NewTodoSQLRepository(conn *sqlx.DB, ctx context.Context) *TodoSQLRepository
 }
 
 func (repo *TodoSQLRepository) Add(item TodoItem) (TodoItem, error) {
-	tx, err := repo.conn.BeginTxx(repo.ctx, nil)
-	if err != nil {
-		return TodoItem{}, err
-	}
+	val, err := db.InTransaction(
+		func(tx *sqlx.Tx) (*TodoItem, error) {
+			row := tx.QueryRowx(
+				`
+				INSERT INTO todo_items
+					(action, due_date, completed)
+				VALUES
+					(?, ?, ?)
+		
+				RETURNING *
+				`,
+				item.Action,
+				item.DueDate,
+				item.Completed,
+			)
 
-	row := tx.QueryRowx(
-		`
-		INSERT INTO todo_items
-			(action, due_date, completed)
-		VALUES
-			(?, ?, ?)
-
-		RETURNING *
-		`,
-		item.Action,
-		item.DueDate,
-		item.Completed,
+			newItem := TodoItem{}
+			err := row.StructScan(&newItem)
+			return &newItem, err
+		},
+		repo.conn,
+		repo.ctx,
 	)
 
-	newItem := TodoItem{}
-	err = row.StructScan(&newItem)
-
-	if err != nil {
-		if e := tx.Rollback(); e != nil {
-			return TodoItem{}, e
-		}
-
-		return TodoItem{}, err
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return TodoItem{}, err
-	}
-
-	return newItem, nil
+	return *val, err
 }
 
 func (repo *TodoSQLRepository) Get(id int) (TodoItem, error) {
