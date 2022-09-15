@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/AP-Hunt/what-next/m/calendar"
 	"github.com/AP-Hunt/what-next/m/db"
 	"github.com/AP-Hunt/what-next/m/todo"
 	"github.com/AP-Hunt/what-next/m/views"
@@ -28,7 +29,8 @@ func CreateDefaultCommandContext(parentContext context.Context) (CommandContext,
 
 	ctx = ctx.
 		WithTodoRepository(todo.NewTodoSQLRepository(database, ctx)).
-		WithViewEngine(&views.StdOutViewEngine{})
+		WithViewEngine(&views.StdOutViewEngine{}).
+		WithCalendarService(calendar.NewCalendarService())
 
 	return ctx, nil
 }

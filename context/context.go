@@ -3,6 +3,7 @@ package context
 import (
 	"context"
 
+	"github.com/AP-Hunt/what-next/m/calendar"
 	"github.com/AP-Hunt/what-next/m/todo"
 	"github.com/AP-Hunt/what-next/m/views"
 )
@@ -10,8 +11,9 @@ import (
 type ContextKey = string
 
 const (
-	CtxTodoRepo   ContextKey = "TodoRepo"
-	CtxViewEngine ContextKey = "ViewEngine"
+	CtxTodoRepo        ContextKey = "TodoRepo"
+	CtxViewEngine      ContextKey = "ViewEngine"
+	CtxCalendarService ContextKey = "CalendarService"
 )
 
 type CommandContext struct {
@@ -38,4 +40,12 @@ func (ctx CommandContext) WithViewEngine(engine views.ViewEngineInterface) Comma
 
 func (ctx CommandContext) ViewEngine() views.ViewEngineInterface {
 	return ctx.Value(CtxViewEngine).(views.ViewEngineInterface)
+}
+
+func (ctx CommandContext) WithCalendarService(service calendar.CalendarServiceInterface) CommandContext {
+	return CommandContext{context.WithValue(ctx, CtxCalendarService, service)}
+}
+
+func (ctx CommandContext) CalendarService() calendar.CalendarServiceInterface {
+	return ctx.Value(CtxCalendarService).(calendar.CalendarServiceInterface)
 }
