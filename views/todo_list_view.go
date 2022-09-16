@@ -3,12 +3,10 @@ package views
 import (
 	"fmt"
 	"io"
-	"math"
 	"strconv"
 
 	"github.com/AP-Hunt/what-next/m/todo"
 	"github.com/isbm/textwrap"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 type TodoListView struct {
@@ -21,19 +19,13 @@ func (v *TodoListView) Draw(out io.Writer) error {
 		false: "[x]",
 	}
 
-	width, _, err := terminal.GetSize(0)
-	if err != nil {
-		return fmt.Errorf("getting size of terminal: %s", err)
-	}
+	idCols := 2
+	completionCols := 1
+	textCols := 9
 
-	oneColWidth := math.Floor(float64(width / 12))
-	idCols := float64(2)
-	completionCols := float64(1)
-	textCols := float64(9)
-
-	idWidth := int(oneColWidth * idCols)
-	completionWidth := int(oneColWidth * completionCols)
-	textWidth := int(oneColWidth * textCols)
+	idWidth := layoutColCharWidth(idCols)
+	completionWidth := layoutColCharWidth(int(completionCols))
+	textWidth := layoutColCharWidth(textCols)
 
 	formatString := fmt.Sprintf("%%-%ss %%%ss %%-%ss\n", strconv.Itoa(idWidth), strconv.Itoa(completionWidth), strconv.Itoa(textWidth))
 	out.Write([]byte(fmt.Sprintf(formatString, "id", "", "action")))
