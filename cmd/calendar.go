@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/AP-Hunt/what-next/m/calendar"
 	"github.com/AP-Hunt/what-next/m/context"
@@ -43,7 +44,11 @@ var CalendarViewCmd = &cobra.Command{
 		}
 
 		calendarView := &views.CalendarView{}
-		calendarView.SetData(cal)
+		calendarViwData := &views.CalendarViewData{
+			Calendar:   cal,
+			TargetDate: time.Now().Truncate(24 * time.Hour),
+		}
+		calendarView.SetData(calendarViwData)
 
 		return viewEngine.Draw(calendarView)
 	},

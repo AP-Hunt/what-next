@@ -6,13 +6,21 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 
 	ical "github.com/arran4/golang-ical"
+
+	"github.com/fatih/color"
 	"golang.org/x/exp/slices"
 )
 
 type CalendarView struct {
-	calendarEntries *ical.Calendar
+	data *CalendarViewData
+}
+
+type CalendarViewData struct {
+	Calendar   *ical.Calendar
+	TargetDate time.Time
 }
 
 func (c *CalendarView) Draw(out io.Writer) error {
@@ -29,11 +37,7 @@ func (c *CalendarView) Draw(out io.Writer) error {
 	roomCols := int(math.Floor(float64(remainingCols) * 0.33))
 	roomWidth := layoutColCharWidth(roomCols)
 
-	lineFormatString := "%-" + strconv.Itoa(durationWidth) + "s%-" + strconv.Itoa(titleWidth) + "s%-" + strconv.Itoa(roomWidth) + "s\n"
-	out.Write([]byte(fmt.Sprintf(lineFormatString, "time", "meeting", "location")))
-	out.Write([]byte(strings.Repeat("-", termWidth) + "\n"))
-
-	events := c.calendarEntries.Events()
+	events := c.data.Calendar.Events()
 	slices.SortFunc(events, func(evtA *ical.VEvent, evtB *ical.VEvent) bool {
 		aStart, err := evtA.GetStartAt()
 		if err != nil {
@@ -71,6 +75,15 @@ func (c *CalendarView) Draw(out io.Writer) error {
 		}
 	})
 
+	boldWhite := color.New(color.FgWhite, color.Bold)
+	date := boldWhite.Sprint(c.data.TargetDate.Format("Monday January _2 2006"))
+
+	out.Write([]byte(fmt.Sprintf("Showing calendar entries for %s\n", date)))
+	out.Write([]byte("\n"))
+	lineFormatString := "%-" + strconv.Itoa(durationWidth) + "s%-" + strconv.Itoa(titleWidth) + "s%-" + strconv.Itoa(roomWidth) + "s\n"
+	out.Write([]byte(fmt.Sprintf(lineFormatString, "time", "meeting", "location")))
+	out.Write([]byte(strings.Repeat("-", termWidth) + "\n"))
+
 	for _, entry := range events {
 
 		entryId := entry.Id()
@@ -99,9 +112,9 @@ func (c *CalendarView) Draw(out io.Writer) error {
 }
 
 func (c *CalendarView) SetData(data interface{}) {
-	c.calendarEntries = data.(*ical.Calendar)
+	c.data = data.(*CalendarViewData)
 }
 
 func (c *CalendarView) Data() interface{} {
-	return c.calendarEntries
+	return c.data
 }
