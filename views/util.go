@@ -1,7 +1,6 @@
 package views
 
 import (
-	"fmt"
 	"math"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -17,7 +16,8 @@ func layoutColCharWidth(n int) int {
 func init() {
 	width, _, err := terminal.GetSize(0)
 	if err != nil {
-		panic(fmt.Sprintf("getting terminal size: %s", err))
+		termWidth = 64
+		return
 	}
 	termWidth = width
 }

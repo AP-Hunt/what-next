@@ -8,6 +8,7 @@ import (
 	"github.com/AP-Hunt/what-next/m/calendar"
 	"github.com/AP-Hunt/what-next/m/context"
 	"github.com/AP-Hunt/what-next/m/views"
+	ical "github.com/arran4/golang-ical"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
 )
@@ -43,10 +44,34 @@ var CalendarViewCmd = &cobra.Command{
 			fmt.Printf("error opening calendar: %s", err)
 		}
 
+		startOfTheDay := time.Now().Truncate(24 * time.Hour)
+		endOfTheDay := startOfTheDay.Add(23 * time.Hour).Add(59 * time.Minute).Add(59 * time.Second)
+
+		todayOnlyCal := ical.NewCalendar()
+		for _, evt := range cal.Events() {
+			start, err := evt.GetStartAt()
+			if err != nil {
+				continue
+			}
+
+			end, err := evt.GetEndAt()
+			if err != nil {
+				continue
+			}
+
+			if start.After(startOfTheDay) && end.Before(endOfTheDay) { // Start and end today
+				todayOnlyCal.AddVEvent(evt)
+			} else if start.Before(startOfTheDay) && (end.After(startOfTheDay) && end.Before(endOfTheDay)) { // Start yesterday end today
+				todayOnlyCal.AddVEvent(evt)
+			} else if (start.After(startOfTheDay) && start.Before(endOfTheDay)) && end.After(endOfTheDay) { // Start today end tomorrow
+				todayOnlyCal.AddVEvent(evt)
+			}
+		}
+
 		calendarView := &views.CalendarView{}
 		calendarViwData := &views.CalendarViewData{
-			Calendar:   cal,
-			TargetDate: time.Now().Truncate(24 * time.Hour),
+			Calendar:   todayOnlyCal,
+			TargetDate: startOfTheDay,
 		}
 		calendarView.SetData(calendarViwData)
 
