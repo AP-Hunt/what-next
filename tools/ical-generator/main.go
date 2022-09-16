@@ -31,13 +31,16 @@ func main() {
 			midnight := time.Now().Truncate(24 * time.Hour)
 			tomorrow := midnight.Add(24 * time.Hour)
 
+			middayYesterday := midnight.Add(-12 * time.Hour)
+			middayTomorrow := tomorrow.Add(12 * time.Hour)
+
 			for i := 1; i <= numEntries; i++ {
 				event := cal.AddEvent(fmt.Sprintf("evt-%d", i))
 
 				event.SetProperty(ical.ComponentProperty(ical.PropertyName), gofakeit.Phrase())
 				event.SetProperty(ical.ComponentProperty(ical.PropertyLocation), fmt.Sprintf("Room %d", gofakeit.Number(0, 101)))
 
-				event.SetStartAt(gofakeit.DateRange(midnight, tomorrow))
+				event.SetStartAt(gofakeit.DateRange(middayYesterday, middayTomorrow))
 				event.SetDuration(time.Duration(gofakeit.Number(5, 181)) * time.Minute)
 			}
 
