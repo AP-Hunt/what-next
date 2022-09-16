@@ -42,7 +42,7 @@ set-env:
 .PHONY: fake-calendar
 fake-calendar:
 	@cd tools/ical-generator; go build
-	@./tools/ical-generator/ical-generator "$${NUM_EVENTS:-12}" > fake.ical
+	@./tools/ical-generator/ical-generator "$${NUM_EVENTS:-200}" > fake.ical
 	@echo "Calendar written to fake.ical"
 
 ## Versioning targets
