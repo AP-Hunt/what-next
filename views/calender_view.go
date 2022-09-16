@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	ical "github.com/arran4/golang-ical"
+	"golang.org/x/exp/slices"
 )
 
 type CalendarView struct {
@@ -32,7 +33,45 @@ func (c *CalendarView) Draw(out io.Writer) error {
 	out.Write([]byte(fmt.Sprintf(lineFormatString, "time", "meeting", "location")))
 	out.Write([]byte(strings.Repeat("-", termWidth) + "\n"))
 
-	for _, entry := range c.calendarEntries.Events() {
+	events := c.calendarEntries.Events()
+	slices.SortFunc(events, func(evtA *ical.VEvent, evtB *ical.VEvent) bool {
+		aStart, err := evtA.GetStartAt()
+		if err != nil {
+			panic(fmt.Sprintf("sorting calendar entries for view: %s", err))
+		}
+
+		bStart, err := evtB.GetStartAt()
+		if err != nil {
+			panic(fmt.Sprintf("sorting calendar entries for view: %s", err))
+		}
+
+		if aStart.Equal(bStart) {
+			aEnd, err := evtA.GetEndAt()
+			if err != nil {
+				panic(fmt.Sprintf("sorting calendar entries for view: %s", err))
+			}
+
+			bEnd, err := evtB.GetEndAt()
+			if err != nil {
+				panic(fmt.Sprintf("sorting calendar entries for view: %s", err))
+			}
+
+			aDuration := aEnd.Sub(aStart)
+			bDuration := bEnd.Sub(bStart)
+
+			if aDuration == bDuration || aDuration > bDuration {
+				return true
+			} else {
+				return false
+			}
+		} else if aStart.Before(bStart) {
+			return true
+		} else {
+			return false
+		}
+	})
+
+	for _, entry := range events {
 
 		entryId := entry.Id()
 
