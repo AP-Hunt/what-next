@@ -45,25 +45,19 @@ var CalendarViewCmd = &cobra.Command{
 		}
 
 		startOfTheDay := time.Now().Truncate(24 * time.Hour)
-		endOfTheDay := startOfTheDay.Add(23 * time.Hour).Add(59 * time.Minute).Add(59 * time.Second)
 
 		todayOnlyCal := ical.NewCalendar()
 		for _, evt := range cal.Events() {
-			start, err := evt.GetStartAt()
+			startsToday, err := calendar.EventStartsToday(evt)
+			if err != nil {
+				continue
+			}
+			endsToday, err := calendar.EventEndsToday(evt)
 			if err != nil {
 				continue
 			}
 
-			end, err := evt.GetEndAt()
-			if err != nil {
-				continue
-			}
-
-			if start.After(startOfTheDay) && end.Before(endOfTheDay) { // Start and end today
-				todayOnlyCal.AddVEvent(evt)
-			} else if start.Before(startOfTheDay) && (end.After(startOfTheDay) && end.Before(endOfTheDay)) { // Start yesterday end today
-				todayOnlyCal.AddVEvent(evt)
-			} else if (start.After(startOfTheDay) && start.Before(endOfTheDay)) && end.After(endOfTheDay) { // Start today end tomorrow
+			if startsToday || endsToday {
 				todayOnlyCal.AddVEvent(evt)
 			}
 		}
