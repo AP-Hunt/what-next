@@ -23,7 +23,7 @@ func (v *TodoListView) Draw(out io.Writer) error {
 	textCols := 9
 	textWidth := layoutColCharWidth(textCols)
 
-	rowFormatter, err := threeColRowFormatter([3]int{idCols * -1, completionCols, textCols * -1})
+	rowFormatter, err := threeColRowFormatter([3]int{colLAlign(idCols), completionCols, colLAlign(textCols)})
 	if err != nil {
 		return err
 	}

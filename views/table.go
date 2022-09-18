@@ -17,6 +17,10 @@ func colSpansAreValid(colSpans []int) bool {
 	return totalSpans <= 12 && totalSpans > 0
 }
 
+func colLAlign(span int) int {
+	return int(math.Abs(float64(span))) * -1
+}
+
 func oneColRowFormatter(colSpans [1]int) (func(colVals [1]string) string, error) {
 	if !colSpansAreValid(colSpans[:]) {
 		return nil, errColSpansInvalid

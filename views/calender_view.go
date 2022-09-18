@@ -132,7 +132,7 @@ func (c *CalendarView) Draw(out io.Writer) error {
 	out.Write([]byte(fmt.Sprintf("%s * = event started yesterday, # = event ends tomorrow\n", boldWhite.Sprint("Key:"))))
 	out.Write([]byte("\n"))
 
-	rowFormatter, err := threeColRowFormatter([3]int{durationCols * -1, titleCols * -1, roomCols * -1})
+	rowFormatter, err := threeColRowFormatter([3]int{colLAlign(durationCols), colLAlign(titleCols), colLAlign(roomCols)})
 	if err != nil {
 		return err
 	}
