@@ -10,6 +10,7 @@ import (
 
 	"github.com/AP-Hunt/what-next/m/calendar"
 	ical "github.com/arran4/golang-ical"
+	"github.com/isbm/textwrap"
 
 	"github.com/fatih/color"
 	"golang.org/x/exp/slices"
@@ -139,8 +140,21 @@ func (c *CalendarView) Draw(out io.Writer) error {
 	out.Write([]byte(boldWhite.Sprintf(lineFormatString, "time", "meeting", "location")))
 	out.Write([]byte(strings.Repeat("-", termWidth) + "\n"))
 
+	wrapper := textwrap.NewTextWrap()
+	wrapper.SetWidth(titleWidth)
+
 	for _, r := range rows {
-		out.Write([]byte(fmt.Sprintf(lineFormatString, r.duration, r.title, r.location)))
+		wrappedTitle := wrapper.Wrap(r.title)
+
+		for i, titleLine := range wrappedTitle {
+			switch i {
+			case 0:
+				out.Write([]byte(fmt.Sprintf(lineFormatString, r.duration, titleLine, r.location)))
+			default:
+				out.Write([]byte(fmt.Sprintf(lineFormatString, "", titleLine, "")))
+			}
+
+		}
 	}
 
 	return nil
