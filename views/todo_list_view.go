@@ -1,7 +1,6 @@
 package views
 
 import (
-	"fmt"
 	"io"
 	"strconv"
 
@@ -22,13 +21,14 @@ func (v *TodoListView) Draw(out io.Writer) error {
 	idCols := 2
 	completionCols := 1
 	textCols := 9
-
-	idWidth := layoutColCharWidth(idCols)
-	completionWidth := layoutColCharWidth(int(completionCols))
 	textWidth := layoutColCharWidth(textCols)
 
-	formatString := fmt.Sprintf("%%-%ss %%%ss %%-%ss\n", strconv.Itoa(idWidth), strconv.Itoa(completionWidth), strconv.Itoa(textWidth))
-	out.Write([]byte(fmt.Sprintf(formatString, "id", "", "action")))
+	rowFormatter, err := threeColRowFormatter([3]int{idCols * -1, completionCols, textCols * -1})
+	if err != nil {
+		return err
+	}
+
+	out.Write([]byte(rowFormatter([3]string{"id", "", "action"})))
 
 	wrapper := textwrap.NewTextWrap()
 	wrapper.SetWidth(textWidth)
@@ -38,21 +38,19 @@ func (v *TodoListView) Draw(out io.Writer) error {
 		for i, line := range textLines {
 			if i == 0 {
 				out.Write([]byte(
-					fmt.Sprintf(
-						formatString,
+					rowFormatter([3]string{
 						strconv.Itoa(item.Id),
 						todoCompletedSymbolMap[item.Completed],
 						line,
-					),
+					}),
 				))
 			} else {
 				out.Write([]byte(
-					fmt.Sprintf(
-						formatString,
+					rowFormatter([3]string{
 						"",
 						"",
 						line,
-					),
+					}),
 				))
 			}
 		}

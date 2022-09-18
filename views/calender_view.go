@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"strconv"
 	"strings"
 	"time"
 
@@ -124,20 +123,23 @@ func (c *CalendarView) Draw(out io.Writer) error {
 	}
 
 	durationCols := colsRequiredToFitChars(longestDurationStrLen)
-	durationWidth := layoutColCharWidth(durationCols)
-
 	remainingCols := 12 - durationCols
 	titleCols := int(math.Floor(float64(remainingCols) * 0.66))
 	titleWidth := layoutColCharWidth(titleCols)
 	roomCols := int(math.Floor(float64(remainingCols) * 0.33))
-	roomWidth := layoutColCharWidth(roomCols)
 
 	out.Write([]byte(fmt.Sprintf("Showing calendar entries for %s\n", date)))
 	out.Write([]byte(fmt.Sprintf("%s * = event started yesterday, # = event ends tomorrow\n", boldWhite.Sprint("Key:"))))
 	out.Write([]byte("\n"))
 
-	lineFormatString := "%-" + strconv.Itoa(durationWidth) + "s%-" + strconv.Itoa(titleWidth) + "s%-" + strconv.Itoa(roomWidth) + "s\n"
-	out.Write([]byte(boldWhite.Sprintf(lineFormatString, "time", "meeting", "location")))
+	rowFormatter, err := threeColRowFormatter([3]int{durationCols * -1, titleCols * -1, roomCols * -1})
+	if err != nil {
+		return err
+	}
+
+	headerRow := boldWhite.Sprint(rowFormatter([3]string{"time", "meeting", "location"}))
+	out.Write([]byte(headerRow))
+
 	out.Write([]byte(strings.Repeat("-", termWidth) + "\n"))
 
 	wrapper := textwrap.NewTextWrap()
@@ -149,9 +151,9 @@ func (c *CalendarView) Draw(out io.Writer) error {
 		for i, titleLine := range wrappedTitle {
 			switch i {
 			case 0:
-				out.Write([]byte(fmt.Sprintf(lineFormatString, r.duration, titleLine, r.location)))
+				out.Write([]byte(rowFormatter([3]string{r.duration, titleLine, r.location})))
 			default:
-				out.Write([]byte(fmt.Sprintf(lineFormatString, "", titleLine, "")))
+				out.Write([]byte(rowFormatter([3]string{"", titleLine, ""})))
 			}
 
 		}
