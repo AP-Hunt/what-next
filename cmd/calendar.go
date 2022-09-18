@@ -20,6 +20,7 @@ var CalendarRootCmd = &cobra.Command{
 
 var CalendarViewCmd = &cobra.Command{
 	Use:     "view display_name",
+	Args:    cobra.ExactArgs(1),
 	Aliases: []string{"v"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var ctx context.CommandContext = cmd.Context().(context.CommandContext)
