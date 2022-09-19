@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/AP-Hunt/what-next/m/cmd"
@@ -17,7 +16,6 @@ func main() {
 	}
 
 	if err := cmd.ExecuteC(ctx); err != nil {
-		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }

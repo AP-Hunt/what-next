@@ -17,16 +17,32 @@ var TodoRootCmd = &cobra.Command{
 }
 
 var TodoAddCmd = &cobra.Command{
-	Use:     "add item",
-	Aliases: []string{"a"},
+	Use:                   "add action [-d|--date datetime]",
+	DisableFlagsInUseLine: true,
+	Aliases:               []string{"a"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var ctx context.CommandContext = cmd.Context().(context.CommandContext)
+
+		dueDateInput, err := cmd.Flags().GetString("due")
+		if err != nil {
+			return err
+		}
+
+		var dueDate time.Time = time.Unix(0, 0)
+		if dueDateInput != "" {
+			parsedDate, err := todo.ParseDueDate(dueDateInput)
+			if err != nil {
+				return err
+			}
+
+			dueDate = parsedDate
+		}
 
 		itemAction := strings.Join(args, " ")
 		item := todo.TodoItem{
 			Action:    itemAction,
 			Completed: false,
-			DueDate:   time.Now(),
+			DueDate:   dueDate,
 		}
 
 		repo := ctx.TodoRepository()
@@ -65,6 +81,18 @@ var TodoListCmd = &cobra.Command{
 }
 
 func init() {
+	TodoAddCmd.Flags().StringP("due", "d", "", todoAddDueDateHelp)
 	TodoRootCmd.AddCommand(TodoAddCmd)
 	TodoRootCmd.AddCommand(TodoListCmd)
 }
+
+var todoAddDueDateHelp = `Optional. Date and time at which the new item is due.
+
+Due dates can be specified as any valid datetime string, and are assumed to be local time.
+For due dates of today or tomorrow, the following shorthand strings can be used:
+* @today
+* @tod
+* @tomorrow
+* @tom
+* @tmrw
+`
