@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/araddon/dateparse"
-	"github.com/golang-module/carbon"
+	"github.com/golang-module/carbon/v2"
 )
 
 func ParseDueDate(input string) (time.Time, error) {

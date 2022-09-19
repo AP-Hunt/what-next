@@ -28,14 +28,13 @@ var TodoAddCmd = &cobra.Command{
 			return err
 		}
 
-		var dueDate time.Time = time.Unix(0, 0)
+		var dueDate *time.Time = nil
 		if dueDateInput != "" {
 			parsedDate, err := todo.ParseDueDate(dueDateInput)
 			if err != nil {
 				return err
 			}
-
-			dueDate = parsedDate
+			dueDate = &parsedDate
 		}
 
 		itemAction := strings.Join(args, " ")

@@ -33,11 +33,12 @@ var _ = Describe("Todo", func() {
 
 	Describe("Add", func() {
 		It("adds a new item and renders the TodoList view", func() {
+			now := time.Now()
 			todoRepo.AddReturns(
 				todo.TodoItem{
 					Id:        1,
 					Action:    "foo",
-					DueDate:   time.Now(),
+					DueDate:   &now,
 					Completed: false,
 				},
 				nil,
@@ -58,12 +59,13 @@ var _ = Describe("Todo", func() {
 
 	Describe("List", func() {
 		It("gets existing items and renders a TodoList view", func() {
+			now := time.Now()
 			todoRepo.ListReturns(
 				todo.NewTodoItemCollection([]*todo.TodoItem{
 					{
 						Id:        1,
 						Action:    "foo",
-						DueDate:   time.Now(),
+						DueDate:   &now,
 						Completed: false,
 					},
 				}),
