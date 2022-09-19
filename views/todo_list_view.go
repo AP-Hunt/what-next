@@ -40,7 +40,17 @@ func (v *TodoListView) Draw(out io.Writer) error {
 		textLines := wrapper.Wrap(item.Action)
 		due := ""
 		if item.DueDate != nil {
-			due = carbon.Time2Carbon(*item.DueDate).Format("dS M y H:i")
+			carbonDate := carbon.Time2Carbon(*item.DueDate)
+
+			if carbonDate.IsYesterday() {
+				due = "Yesterday"
+			} else if carbonDate.IsToday() {
+				due = "Today"
+			} else if carbonDate.IsTomorrow() {
+				due = "Tomorrow"
+			} else {
+				due = carbonDate.Format("dS M y H:i")
+			}
 		}
 
 		for i, line := range textLines {
