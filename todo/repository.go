@@ -34,17 +34,23 @@ func NewTodoSQLRepository(conn *sqlx.DB, ctx context.Context) *TodoSQLRepository
 func (repo *TodoSQLRepository) Add(item TodoItem) (TodoItem, error) {
 	val, err := db.InTransaction(
 		func(tx *sqlx.Tx) (*TodoItem, error) {
+			var duration *int = nil
+			if item.Duration != nil {
+				d := int(*item.Duration)
+				duration = &d
+			}
 			row := tx.QueryRowx(
 				`
 				INSERT INTO todo_items
-					(action, due_date, completed)
+					(action, due_date, duration, completed)
 				VALUES
-					(?, ?, ?)
+					(?, ?, ?, ?)
 		
 				RETURNING *
 				`,
 				item.Action,
 				item.DueDate,
+				duration,
 				item.Completed,
 			)
 
@@ -56,7 +62,11 @@ func (repo *TodoSQLRepository) Add(item TodoItem) (TodoItem, error) {
 		repo.ctx,
 	)
 
-	return *val, err
+	if err != nil {
+		return TodoItem{}, err
+	}
+
+	return *val, nil
 }
 
 func (repo *TodoSQLRepository) Get(id int) (TodoItem, error) {

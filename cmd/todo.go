@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hako/durafmt"
 	"github.com/spf13/cobra"
 
 	"github.com/AP-Hunt/what-next/m/context"
@@ -17,24 +18,43 @@ var TodoRootCmd = &cobra.Command{
 }
 
 var TodoAddCmd = &cobra.Command{
-	Use:                   "add action [-d|--date datetime]",
+	Use:                   "add action [--due due] [--duration duration]",
 	DisableFlagsInUseLine: true,
 	Aliases:               []string{"a"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var ctx context.CommandContext = cmd.Context().(context.CommandContext)
-
-		dueDateInput, err := cmd.Flags().GetString("due")
-		if err != nil {
-			return err
-		}
-
 		var dueDate *time.Time = nil
-		if dueDateInput != "" {
-			parsedDate, err := todo.ParseDueDate(dueDateInput)
+
+		if cmd.Flags().Lookup("due") != nil {
+			dueDateInput, err := cmd.Flags().GetString("due")
 			if err != nil {
 				return err
 			}
-			dueDate = &parsedDate
+
+			if dueDateInput != "" {
+				parsedDate, err := todo.ParseDueDate(dueDateInput)
+				if err != nil {
+					return err
+				}
+				dueDate = &parsedDate
+			}
+		}
+
+		var duration *time.Duration = nil
+
+		if cmd.Flags().Lookup("duration") != nil {
+			durationInput, err := cmd.Flags().GetString("duration")
+			if err != nil {
+				return err
+			}
+			if durationInput != "" {
+				parsedDuration, err := durafmt.ParseString(durationInput)
+				if err != nil {
+					return err
+				}
+				pd := parsedDuration.Duration()
+				duration = &pd
+			}
 		}
 
 		itemAction := strings.Join(args, " ")
@@ -42,6 +62,7 @@ var TodoAddCmd = &cobra.Command{
 			Action:    itemAction,
 			Completed: false,
 			DueDate:   dueDate,
+			Duration:  duration,
 		}
 
 		repo := ctx.TodoRepository()
@@ -80,7 +101,8 @@ var TodoListCmd = &cobra.Command{
 }
 
 func init() {
-	TodoAddCmd.Flags().StringP("due", "d", "", todoAddDueDateHelp)
+	TodoAddCmd.Flags().String("due", "", todoAddDueDateHelp)
+	TodoAddCmd.Flags().String("duration", "", todoAddDurationHelp)
 	TodoRootCmd.AddCommand(TodoAddCmd)
 	TodoRootCmd.AddCommand(TodoListCmd)
 }
@@ -95,3 +117,5 @@ For due dates of today or tomorrow, the following shorthand strings can be used:
 * @tom
 * @tmrw
 `
+
+var todoAddDurationHelp = `Optional. Duration you expect this item to take. Durations can be provided in a human readable form, e.g. '30m' or '1h10m'.`

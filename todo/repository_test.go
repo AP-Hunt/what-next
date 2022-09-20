@@ -35,12 +35,13 @@ var _ = Describe("Repository", func() {
 	})
 
 	It("can add a new item", func() {
-		By("ignoring the id field")
-
+		now := time.Now()
+		duration := 60 * time.Second
 		item := todo.TodoItem{
 			Id:        999,
 			Action:    "doing some stuff",
-			DueDate:   time.Now(),
+			DueDate:   &now,
+			Duration:  &duration,
 			Completed: false,
 		}
 
@@ -49,12 +50,18 @@ var _ = Describe("Repository", func() {
 
 		Expect(addedItem).ToNot(BeIdenticalTo(item))
 		Expect(addedItem.Id).To(Equal(1))
+		Expect(addedItem.Action).To(Equal(item.Action))
+		Expect(*addedItem.DueDate).To(BeTemporally("==", *item.DueDate))
+		Expect(*addedItem.Duration).To(Equal(*item.Duration))
 	})
 
 	It("can fetch an item that was previously inserted", func() {
+		now := time.Now()
+		duration := 60 * time.Second
 		item := todo.TodoItem{
 			Action:    "new item",
-			DueDate:   time.Now(),
+			DueDate:   &now,
+			Duration:  &duration,
 			Completed: false,
 		}
 

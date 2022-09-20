@@ -11,17 +11,18 @@ import (
 var _ = Describe("TodoItemCollection", func() {
 	Describe("Enumerate", func() {
 		It("exposes the internally held items for iteration", func() {
+			now := time.Now()
 			items := []*TodoItem{
 				{
 					Id:        1,
 					Action:    "First",
-					DueDate:   time.Now(),
+					DueDate:   &now,
 					Completed: false,
 				},
 				{
 					Id:        2,
 					Action:    "Second",
-					DueDate:   time.Now(),
+					DueDate:   &now,
 					Completed: false,
 				},
 			}
@@ -34,17 +35,18 @@ var _ = Describe("TodoItemCollection", func() {
 
 	Describe("Filter", func() {
 		It("returns a new collection containing the items which met the filter function criteria", func() {
+			now := time.Now()
 			items := []*TodoItem{
 				{
 					Id:        1,
 					Action:    "First",
-					DueDate:   time.Now(),
+					DueDate:   &now,
 					Completed: false,
 				},
 				{
 					Id:        2,
 					Action:    "Second",
-					DueDate:   time.Now(),
+					DueDate:   &now,
 					Completed: true,
 				},
 			}
