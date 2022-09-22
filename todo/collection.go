@@ -31,3 +31,14 @@ func (c *TodoItemCollection) Filter(filter func(*TodoItem) bool) *TodoItemCollec
 func (c *TodoItemCollection) Len() int {
 	return len(c.items)
 }
+
+func (c *TodoItemCollection) Append(other *TodoItemCollection) *TodoItemCollection {
+	aItems := c.items
+	bItems := other.items
+
+	for _, i := range bItems {
+		aItems = append(aItems, i)
+	}
+
+	return NewTodoItemCollection(aItems)
+}
