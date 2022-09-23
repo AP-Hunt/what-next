@@ -18,6 +18,7 @@ type CalendarServiceInterface interface {
 	OpenCalendar(url string) (*ical.Calendar, error)
 	AddCalendar(url string, displayName string) (*CalendarRecord, error)
 	GetCalendarByDisplayName(displayName string) (*CalendarRecord, error)
+	GetAllCalendars() ([]CalendarRecord, error)
 }
 
 type CalendarService struct {
@@ -121,4 +122,15 @@ func (c *CalendarService) GetCalendarByDisplayName(displayName string) (*Calenda
 	}
 
 	return &record, nil
+}
+
+func (c *CalendarService) GetAllCalendars() ([]CalendarRecord, error) {
+	records := []CalendarRecord{}
+	err := c.db.SelectContext(c.ctx, &records, "SELECT * FROM calendars")
+
+	if err != nil {
+		return []CalendarRecord{}, err
+	}
+
+	return records, nil
 }
