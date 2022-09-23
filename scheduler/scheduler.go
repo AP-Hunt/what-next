@@ -22,7 +22,7 @@ type Schedule struct {
 // * the next calendar event after that
 // * the time until that event
 // * which tasks from the todo list are achievable in that time
-func GenerateSchedule(now time.Time, cal *ical.Calendar, todoList *todo.TodoItemCollection) (*Schedule, error) {
+func GenerateSchedule(now time.Time, calendars []*ical.Calendar, todoList *todo.TodoItemCollection) (*Schedule, error) {
 	schedule := &Schedule{
 		CurrentCalendarEvents:      []*ical.VEvent{},
 		NextCalendarEvents:         []*ical.VEvent{},
@@ -30,9 +30,14 @@ func GenerateSchedule(now time.Time, cal *ical.Calendar, todoList *todo.TodoItem
 		AchievableTasks:            todo.TodoItemCollection{},
 	}
 
-	events := cal.Events()
+	allEvents := []*ical.VEvent{}
+	for _, cal := range calendars {
+		for _, e := range cal.Events() {
+			allEvents = append(allEvents, e)
+		}
+	}
 
-	for _, event := range events {
+	for _, event := range allEvents {
 		isHappening, err := calendar.EventIsCurrentlyHappening(event, now)
 
 		if err != nil {
@@ -45,7 +50,7 @@ func GenerateSchedule(now time.Time, cal *ical.Calendar, todoList *todo.TodoItem
 	}
 
 	eventsStartingAfterNow := []*ical.VEvent{}
-	for _, event := range events {
+	for _, event := range allEvents {
 		start, err := event.GetStartAt()
 		if err != nil {
 			return nil, err

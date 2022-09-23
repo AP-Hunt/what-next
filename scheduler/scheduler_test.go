@@ -113,7 +113,7 @@ var _ = Describe("Scheduler", func() {
 
 				todoList := todo.NewTodoItemCollection([]*todo.TodoItem{})
 
-				schedule, err := scheduler.GenerateSchedule(now, cal, todoList)
+				schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{cal}, todoList)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(schedule.CurrentCalendarEvents).To(ContainElement(currentEvent))
@@ -136,7 +136,7 @@ var _ = Describe("Scheduler", func() {
 
 				todoList := todo.NewTodoItemCollection([]*todo.TodoItem{})
 
-				schedule, err := scheduler.GenerateSchedule(now, cal, todoList)
+				schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{cal}, todoList)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(schedule.CurrentCalendarEvents).To(ContainElement(eventOne))
@@ -155,7 +155,7 @@ var _ = Describe("Scheduler", func() {
 
 				todoList := todo.NewTodoItemCollection([]*todo.TodoItem{})
 
-				schedule, err := scheduler.GenerateSchedule(now, cal, todoList)
+				schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{cal}, todoList)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(schedule.NextCalendarEvents).To(ContainElement(nextEvent))
@@ -172,7 +172,7 @@ var _ = Describe("Scheduler", func() {
 
 				todoList := todo.NewTodoItemCollection([]*todo.TodoItem{})
 
-				schedule, err := scheduler.GenerateSchedule(now, cal, todoList)
+				schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{cal}, todoList)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(schedule.NextCalendarEvents).To(ContainElement(nextEvent))
@@ -191,7 +191,7 @@ var _ = Describe("Scheduler", func() {
 
 					todoList := todo.NewTodoItemCollection([]*todo.TodoItem{})
 
-					schedule, err := scheduler.GenerateSchedule(now, cal, todoList)
+					schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{cal}, todoList)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(schedule.NextCalendarEvents).To(ContainElement(nextEvent))
@@ -209,7 +209,7 @@ var _ = Describe("Scheduler", func() {
 
 				todoList := todo.NewTodoItemCollection([]*todo.TodoItem{})
 
-				schedule, err := scheduler.GenerateSchedule(now, cal, todoList)
+				schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{cal}, todoList)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(schedule.TimeUntilNextCalendarEvent).ToNot(BeNil())
@@ -235,7 +235,7 @@ var _ = Describe("Scheduler", func() {
 
 				todoList := todo.NewTodoItemCollection([]*todo.TodoItem{})
 
-				schedule, err := scheduler.GenerateSchedule(now, cal, todoList)
+				schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{cal}, todoList)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(schedule.NextCalendarEvents).To(HaveLen(0))
@@ -250,7 +250,7 @@ var _ = Describe("Scheduler", func() {
 
 				todoList := todo.NewTodoItemCollection([]*todo.TodoItem{})
 
-				schedule, err := scheduler.GenerateSchedule(now, cal, todoList)
+				schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{cal}, todoList)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(schedule.TimeUntilNextCalendarEvent).To(BeNil())
@@ -272,7 +272,7 @@ var _ = Describe("Scheduler", func() {
 					otherwiseAchievableTask,
 				})
 
-				schedule, err := scheduler.GenerateSchedule(now, cal, tasks)
+				schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{cal}, tasks)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(schedule.AchievableTasks.Enumerate()).ToNot(ContainElement(otherwiseAchievableTask))
@@ -287,7 +287,7 @@ var _ = Describe("Scheduler", func() {
 					taskShortEnough,
 				})
 
-				schedule, err := scheduler.GenerateSchedule(now, cal, tasks)
+				schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{cal}, tasks)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(schedule.AchievableTasks.Enumerate()).To(ContainElement(taskShortEnough))
@@ -303,7 +303,7 @@ var _ = Describe("Scheduler", func() {
 					taskShortEnough,
 				})
 
-				schedule, err := scheduler.GenerateSchedule(now, cal, tasks)
+				schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{cal}, tasks)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(schedule.AchievableTasks.Enumerate()).To(ContainElement(taskHasNoDuration))
@@ -324,7 +324,7 @@ var _ = Describe("Scheduler", func() {
 					taskWithDueDateInTheFuture,
 				})
 
-				schedule, err := scheduler.GenerateSchedule(now, cal, tasks)
+				schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{cal}, tasks)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(schedule.AchievableTasks.Enumerate()).To(ContainElement(taskWithDueDateInTheFuture))
@@ -354,7 +354,7 @@ var _ = Describe("Scheduler", func() {
 						taskWithNoDueDate,
 					})
 
-					schedule, err := scheduler.GenerateSchedule(now, calWithoutFutureEvents, tasks)
+					schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{calWithoutFutureEvents}, tasks)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(schedule.AchievableTasks.Enumerate()).To(ContainElement(taskWithDueDateInTheFuture))
@@ -362,6 +362,24 @@ var _ = Describe("Scheduler", func() {
 					Expect(schedule.AchievableTasks.Enumerate()).To(ContainElement(taskWithNoDueDate))
 				})
 			})
+		})
+
+		It("CurrentCalendarEvents and NextCalendarEvents fields will contain events from all input calendars", func() {
+			currentEventInCalA := newEvent(now, "-30m", "1h")
+			currentEventInCalB := newEvent(now, "-60m", "1h30m")
+			nextEventInCalA := newEvent(now, "2h", "10m")
+			nextEventInCalB := newEvent(now, "2h", "30m")
+
+			calA := generateCalendar(currentEventInCalA, nextEventInCalA)
+			calB := generateCalendar(currentEventInCalB, nextEventInCalB)
+
+			tasks := todo.NewTodoItemCollection([]*todo.TodoItem{})
+
+			schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{calA, calB}, tasks)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(schedule.CurrentCalendarEvents).To(ContainElements(currentEventInCalA, currentEventInCalB))
+			Expect(schedule.NextCalendarEvents).To(ContainElements(nextEventInCalA, nextEventInCalB))
 		})
 	})
 })
