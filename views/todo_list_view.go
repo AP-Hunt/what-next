@@ -1,12 +1,13 @@
 package views
 
 import (
+	"fmt"
 	"io"
-	"math"
 	"strconv"
 	"strings"
 
 	"github.com/AP-Hunt/what-next/m/todo"
+	"github.com/alexeyco/simpletable"
 	"github.com/golang-module/carbon/v2"
 	"github.com/hako/durafmt"
 	"github.com/isbm/textwrap"
@@ -18,39 +19,31 @@ type TodoListView struct {
 
 func (v *TodoListView) Draw(out io.Writer) error {
 	todoCompletedSymbolMap := map[bool]string{
-		true:  "[✓]",
-		false: "[ ]",
+		true:  "✓",
+		false: "",
 	}
 
-	idCols := 2
-	completionCols := 1
-	dueCols := 3
-	durationCols := 2
-	textCols := 4
-	textWidth := layoutColCharWidth(textCols)
-
-	rowFormatter, err := fiveColRowFormatter([5]int{
-		colLAlign(idCols),
-		colLAlign(completionCols),
-		colLAlign(dueCols),
-		colLAlign(durationCols),
-		colLAlign(textCols),
-	})
-	if err != nil {
-		return err
+	tbl := simpletable.New()
+	tbl.Header = &simpletable.Header{
+		Cells: []*simpletable.Cell{
+			{Align: simpletable.AlignRight, Text: "#"},
+			{Align: simpletable.AlignCenter, Text: "✓?"},
+			{Align: simpletable.AlignLeft, Text: "Due"},
+			{Align: simpletable.AlignLeft, Text: "Duration"},
+			{Align: simpletable.AlignLeft, Text: "Action"},
+		},
 	}
-
-	out.Write([]byte(rowFormatter([5]string{"id", "✓?", "due", "duration", "action"})))
-	out.Write([]byte(strings.Repeat("-", termWidth)))
+	tbl.SetStyle(simpletable.StyleCompactLite)
 
 	textWrapper := textwrap.NewTextWrap()
-	textWrapper.SetWidth(textWidth)
+	textWrapper.SetWidth(30)
 
 	durationWrapper := textwrap.NewTextWrap()
-	durationWrapper.SetWidth(layoutColCharWidth(durationCols))
+	durationWrapper.SetWidth(30)
 
 	for _, item := range v.todoItems.Enumerate() {
 		textLines := textWrapper.Wrap(item.Action)
+		multiLineText := strings.Join(textLines, "\n")
 
 		due := ""
 		if item.DueDate != nil {
@@ -73,43 +66,20 @@ func (v *TodoListView) Draw(out io.Writer) error {
 		}
 
 		durationLines := durationWrapper.Wrap(duration)
-		maxLines := math.Max(float64(len(textLines)), float64(len(durationLines)))
+		multiLineDuration := strings.Join(durationLines, "\n")
 
-		for i := 0; i < int(maxLines); i++ {
-			textLine := ""
-			durationLine := ""
-
-			if i < len(textLines) {
-				textLine = textLines[i]
-			}
-
-			if i < len(durationLines) {
-				durationLine = durationLines[i]
-			}
-
-			if i == 0 {
-				out.Write([]byte(
-					rowFormatter([5]string{
-						strconv.Itoa(item.Id),
-						todoCompletedSymbolMap[item.Completed],
-						due,
-						durationLine,
-						textLine,
-					}),
-				))
-			} else {
-				out.Write([]byte(
-					rowFormatter([5]string{
-						"",
-						"",
-						"",
-						durationLine,
-						textLine,
-					}),
-				))
-			}
+		row := []*simpletable.Cell{
+			{Align: simpletable.AlignRight, Text: strconv.Itoa(item.Id)},
+			{Align: simpletable.AlignCenter, Text: todoCompletedSymbolMap[item.Completed]},
+			{Align: simpletable.AlignLeft, Text: due},
+			{Align: simpletable.AlignLeft, Text: multiLineDuration},
+			{Align: simpletable.AlignLeft, Text: multiLineText},
 		}
+
+		tbl.Body.Cells = append(tbl.Body.Cells, row)
 	}
+
+	fmt.Fprintln(out, tbl.String())
 
 	return nil
 }

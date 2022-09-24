@@ -3,12 +3,10 @@ package views
 import (
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/AP-Hunt/what-next/m/scheduler"
 	ical "github.com/arran4/golang-ical"
 	"github.com/fatih/color"
-	"github.com/golang-module/carbon/v2"
 	"github.com/hako/durafmt"
 )
 
@@ -136,46 +134,13 @@ func (s *ScheduleView) drawAchievableTasks(out io.Writer) error {
 	}
 	fmt.Fprintln(out)
 
-	rowFmt, err := threeColRowFormatter([3]int{colLAlign(4), colLAlign(2), colLAlign(2)})
+	todoListView := TodoListView{}
+	todoListView.SetData(&s.schedule.AchievableTasks)
+
+	err := todoListView.Draw(out)
 	if err != nil {
 		return err
 	}
-
-	boldWhite.Fprintf(out, "\t%s", rowFmt([3]string{"item", "duration", "due"}))
-	fmt.Fprintf(out, "\t%s\n", strings.Repeat("-", layoutColCharWidth(8)))
-
-	for _, task := range s.schedule.AchievableTasks.Enumerate() {
-		taskDurationStr := ""
-		if task.Duration != nil {
-			durStr := durafmt.Parse(*task.Duration).LimitFirstN(2)
-			taskDurationStr = durStr.String()
-		}
-
-		due := ""
-		if task.DueDate != nil {
-			carbonDate := carbon.Time2Carbon(*task.DueDate)
-
-			if carbonDate.IsYesterday() {
-				due = "Yesterday"
-			} else if carbonDate.IsToday() {
-				due = "Today"
-			} else if carbonDate.IsTomorrow() {
-				due = "Tomorrow"
-			} else {
-				due = carbonDate.Format("dS M y H:i")
-			}
-		}
-
-		fmt.Fprintf(
-			out,
-			"\t%s",
-			rowFmt([3]string{
-				task.Action,
-				taskDurationStr,
-				due,
-			}))
-	}
-	fmt.Fprintln(out)
 
 	return nil
 }
