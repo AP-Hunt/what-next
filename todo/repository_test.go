@@ -86,4 +86,37 @@ var _ = Describe("Repository", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(collection.Len()).To(Equal(2))
 	})
+
+	It("update an item", func() {
+		item := todo.TodoItem{
+			Id:        0,
+			Action:    "initial",
+			DueDate:   nil,
+			Duration:  nil,
+			Completed: false,
+		}
+
+		addedItem, err := repo.Add(item)
+		Expect(err).ToNot(HaveOccurred())
+
+		dueDate := time.Date(2020, 01, 01, 00, 00, 00, 00, time.Local)
+		addedItem.DueDate = &dueDate
+
+		duration := 30 * time.Minute
+		addedItem.Duration = &duration
+
+		addedItem.Action = "updated"
+		addedItem.Completed = true
+
+		updatedItem, err := repo.Update(addedItem)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(updatedItem).ToNot(BeNil())
+		Expect(updatedItem).ToNot(BeIdenticalTo(addedItem), "the repo update method should not be returning the exact same struct")
+
+		Expect(*updatedItem.DueDate).To(BeTemporally("==", dueDate))
+		Expect(int(*updatedItem.Duration)).To(BeNumerically("==", int(duration)))
+		Expect(updatedItem.Completed).To(BeTrue())
+		Expect(updatedItem.Action).To(Equal("updated"))
+	})
 })

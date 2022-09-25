@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"database/sql"
+	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -100,11 +103,52 @@ var TodoListCmd = &cobra.Command{
 	},
 }
 
+var TodoCompleteCmd = &cobra.Command{
+	Use:     "complete id",
+	Aliases: []string{"c"},
+	Args:    cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		var ctx context.CommandContext = cmd.Context().(context.CommandContext)
+		repo := ctx.TodoRepository()
+
+		idStr := args[0]
+		idInt, err := strconv.ParseInt(idStr, 10, 32)
+		if err != nil {
+			return fmt.Errorf("id must be an integer")
+		}
+
+		item, err := repo.Get(int(idInt))
+
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return fmt.Errorf("no todo item with id %d", int(idInt))
+			}
+
+			return err
+		}
+
+		item.Completed = true
+		updated, err := repo.Update(item)
+		if err != nil {
+			return err
+		}
+
+		items := todo.NewTodoItemCollection([]*todo.TodoItem{&updated})
+
+		viewEngine := ctx.ViewEngine()
+		view := views.TodoListView{}
+		view.SetData(items)
+
+		return viewEngine.Draw(&view)
+	},
+}
+
 func init() {
 	TodoAddCmd.Flags().String("due", "", todoAddDueDateHelp)
 	TodoAddCmd.Flags().String("duration", "", todoAddDurationHelp)
 	TodoRootCmd.AddCommand(TodoAddCmd)
 	TodoRootCmd.AddCommand(TodoListCmd)
+	TodoRootCmd.AddCommand(TodoCompleteCmd)
 }
 
 var todoAddDueDateHelp = `Optional. Date and time at which the new item is due.

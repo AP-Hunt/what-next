@@ -17,6 +17,7 @@ type TodoRepositoryInterface interface {
 	Add(item TodoItem) (TodoItem, error)
 	Get(id int) (TodoItem, error)
 	List() (*TodoItemCollection, error)
+	Update(item TodoItem) (TodoItem, error)
 }
 
 type TodoSQLRepository struct {
@@ -88,4 +89,43 @@ func (repo *TodoSQLRepository) List() (*TodoItemCollection, error) {
 	}
 
 	return NewTodoItemCollection(items), nil
+}
+
+func (repo *TodoSQLRepository) Update(item TodoItem) (TodoItem, error) {
+	updated, err := db.InTransaction(
+		func(tx *sqlx.Tx) (*TodoItem, error) {
+
+			var updatedItem TodoItem
+
+			err := tx.QueryRowx(
+				`
+					UPDATE todo_items
+					SET
+						action = ?,
+						due_date = ?,
+						duration = ?,
+						completed = ?
+					WHERE 
+						id = ?
+
+					RETURNING *
+				`,
+				item.Action,
+				item.DueDate,
+				item.Duration,
+				item.Completed,
+				item.Id,
+			).StructScan(&updatedItem)
+
+			return &updatedItem, err
+		},
+		repo.conn,
+		repo.ctx,
+	)
+
+	if err != nil {
+		return TodoItem{}, err
+	}
+
+	return *updated, nil
 }
