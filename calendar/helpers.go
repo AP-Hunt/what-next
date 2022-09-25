@@ -1,9 +1,11 @@
 package calendar
 
 import (
+	"fmt"
 	"time"
 
 	ical "github.com/arran4/golang-ical"
+	"golang.org/x/exp/slices"
 )
 
 var midnightToday = time.Now().Truncate(24 * time.Hour)
@@ -32,12 +34,7 @@ func EventEndsToday(evt *ical.VEvent) (bool, error) {
 }
 
 func EventIsCurrentlyHappening(evt *ical.VEvent, now time.Time) (bool, error) {
-	start, err := evt.GetStartAt()
-	if err != nil {
-		return false, err
-	}
-
-	end, err := evt.GetEndAt()
+	start, end, err := EventStartAndEnd(evt)
 	if err != nil {
 		return false, err
 	}
@@ -51,4 +48,54 @@ func EventIsCurrentlyHappening(evt *ical.VEvent, now time.Time) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func EventStartAndEnd(evt *ical.VEvent) (time.Time, time.Time, error) {
+	var err error = nil
+	start, startErr := evt.GetStartAt()
+	if startErr != nil {
+		err = fmt.Errorf("cannot fetch start time: %s", startErr)
+	}
+
+	end, endErr := evt.GetEndAt()
+	if endErr != nil {
+		err = fmt.Errorf("%s\ncannot fetch end time: %s", err, endErr)
+	}
+
+	return start, end, err
+}
+
+func SortEventsByStartDateAscending(events []*ical.VEvent) error {
+	var err error = nil
+	slices.SortFunc(events, func(evtA *ical.VEvent, evtB *ical.VEvent) bool {
+
+		aStart, aEnd, err := EventStartAndEnd(evtA)
+		if err != nil {
+			err = fmt.Errorf("sorting calendar entries: %s", err)
+			return false
+		}
+
+		bStart, bEnd, err := EventStartAndEnd(evtB)
+		if err != nil {
+			err = fmt.Errorf("sorting calendar entries: %s", err)
+			return false
+		}
+
+		if aStart.Equal(bStart) {
+			aDuration := aEnd.Sub(aStart)
+			bDuration := bEnd.Sub(bStart)
+
+			if aDuration == bDuration || aDuration > bDuration {
+				return true
+			} else {
+				return false
+			}
+		} else if aStart.Before(bStart) {
+			return true
+		}
+
+		return false
+	})
+
+	return err
 }

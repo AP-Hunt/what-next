@@ -3,16 +3,15 @@ package views
 import (
 	"fmt"
 	"io"
-	"math"
 	"strings"
 	"time"
 
 	"github.com/AP-Hunt/what-next/m/calendar"
+	"github.com/alexeyco/simpletable"
 	ical "github.com/arran4/golang-ical"
 	"github.com/isbm/textwrap"
 
 	"github.com/fatih/color"
-	"golang.org/x/exp/slices"
 )
 
 type CalendarView struct {
@@ -25,71 +24,37 @@ type CalendarViewData struct {
 }
 
 func (c *CalendarView) Draw(out io.Writer) error {
-	type tableRow struct {
-		duration string
-		title    string
-		location string
-	}
-
 	events := c.data.Calendar.Events()
-	slices.SortFunc(events, func(evtA *ical.VEvent, evtB *ical.VEvent) bool {
-		aStart, err := evtA.GetStartAt()
-		if err != nil {
-			panic(fmt.Sprintf("sorting calendar entries for view: %s", err))
-		}
-
-		bStart, err := evtB.GetStartAt()
-		if err != nil {
-			panic(fmt.Sprintf("sorting calendar entries for view: %s", err))
-		}
-
-		if aStart.Equal(bStart) {
-			aEnd, err := evtA.GetEndAt()
-			if err != nil {
-				panic(fmt.Sprintf("sorting calendar entries for view: %s", err))
-			}
-
-			bEnd, err := evtB.GetEndAt()
-			if err != nil {
-				panic(fmt.Sprintf("sorting calendar entries for view: %s", err))
-			}
-
-			aDuration := aEnd.Sub(aStart)
-			bDuration := bEnd.Sub(bStart)
-
-			if aDuration == bDuration || aDuration > bDuration {
-				return true
-			} else {
-				return false
-			}
-		} else if aStart.Before(bStart) {
-			return true
-		} else {
-			return false
-		}
-	})
+	err := calendar.SortEventsByStartDateAscending(events)
+	if err != nil {
+		return err
+	}
 
 	boldWhite := color.New(color.FgWhite, color.Bold)
 	date := boldWhite.Sprint(c.data.TargetDate.Format("Monday January _2 2006"))
 
-	// Build list of rows before drawing so we can work out the widest column
-	rows := []tableRow{}
-	longestDurationStrLen := 0
+	tbl := simpletable.New()
+	tbl.SetStyle(simpletable.StyleCompactLite)
+	tbl.Header.Cells = []*simpletable.Cell{
+		{Align: simpletable.AlignRight, Text: "Time"},
+		{Align: simpletable.AlignLeft, Text: "Title"},
+		{Align: simpletable.AlignLeft, Text: "Room"},
+	}
+
+	titleWrapper := textwrap.NewTextWrap()
+	titleWrapper.SetWidth(30)
+
+	timeWrapper := textwrap.NewTextWrap()
+	timeWrapper.SetWidth(30)
+
 	for _, evt := range events {
-		row := tableRow{}
+		evtId := evt.Id()
+		title := evt.GetProperty(ical.ComponentProperty(ical.PropertyName)).Value
+		location := evt.GetProperty(ical.ComponentProperty(ical.PropertyLocation)).Value
 
-		entryId := evt.Id()
-		row.title = evt.GetProperty(ical.ComponentProperty(ical.PropertyName)).Value
-		row.location = evt.GetProperty(ical.ComponentProperty(ical.PropertyLocation)).Value
-
-		startTime, err := evt.GetStartAt()
+		startTime, endTime, err := calendar.EventStartAndEnd(evt)
 		if err != nil {
-			return fmt.Errorf("failed to get entry start time for calendar entry %s: %s", entryId, err)
-		}
-
-		endTime, err := evt.GetEndAt()
-		if err != nil {
-			return fmt.Errorf("failed to get entry end time for calendar entry %s: %s", entryId, err)
+			return fmt.Errorf("failed to extract start and end time for evt %s: %s", evtId, err)
 		}
 
 		startsToday, err := calendar.EventStartsToday(evt)
@@ -113,51 +78,25 @@ func (c *CalendarView) Draw(out io.Writer) error {
 			dateMarkers = "#" + dateMarkers
 		}
 
-		row.duration = fmt.Sprintf("%-3s%s - %s", dateMarkers, startStr, endStr)
+		timeStr := fmt.Sprintf("%-3s%s - %s", dateMarkers, startStr, endStr)
+		timeStr = strings.Join(timeWrapper.Wrap(timeStr), "\n")
 
-		if len(row.duration) > longestDurationStrLen {
-			longestDurationStrLen = len(row.duration)
-		}
+		titleStr := strings.Join(
+			titleWrapper.Wrap(title),
+			"\n",
+		)
 
-		rows = append(rows, row)
+		tbl.Body.Cells = append(tbl.Body.Cells, []*simpletable.Cell{
+			{Align: simpletable.AlignRight, Text: timeStr},
+			{Align: simpletable.AlignLeft, Text: titleStr},
+			{Align: simpletable.AlignLeft, Text: location},
+		})
 	}
 
-	durationCols := colsRequiredToFitChars(longestDurationStrLen)
-	remainingCols := 12 - durationCols
-	titleCols := int(math.Floor(float64(remainingCols) * 0.66))
-	titleWidth := layoutColCharWidth(titleCols)
-	roomCols := int(math.Floor(float64(remainingCols) * 0.33))
-
-	out.Write([]byte(fmt.Sprintf("Showing calendar entries for %s\n", date)))
-	out.Write([]byte(fmt.Sprintf("%s * = event started yesterday, # = event ends tomorrow\n", boldWhite.Sprint("Key:"))))
-	out.Write([]byte("\n"))
-
-	rowFormatter, err := threeColRowFormatter([3]int{colLAlign(durationCols), colLAlign(titleCols), colLAlign(roomCols)})
-	if err != nil {
-		return err
-	}
-
-	headerRow := boldWhite.Sprint(rowFormatter([3]string{"time", "meeting", "location"}))
-	out.Write([]byte(headerRow))
-
-	out.Write([]byte(strings.Repeat("-", termWidth) + "\n"))
-
-	wrapper := textwrap.NewTextWrap()
-	wrapper.SetWidth(titleWidth)
-
-	for _, r := range rows {
-		wrappedTitle := wrapper.Wrap(r.title)
-
-		for i, titleLine := range wrappedTitle {
-			switch i {
-			case 0:
-				out.Write([]byte(rowFormatter([3]string{r.duration, titleLine, r.location})))
-			default:
-				out.Write([]byte(rowFormatter([3]string{"", titleLine, ""})))
-			}
-
-		}
-	}
+	fmt.Fprintf(out, "Showing calendar entries for %s\n", date)
+	fmt.Fprintf(out, "%s * = event started yesterday, # = event ends tomorrow\n", boldWhite.Sprint("Key:"))
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, tbl.String())
 
 	return nil
 }
