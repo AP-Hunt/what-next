@@ -71,7 +71,7 @@ func GenerateSchedule(now time.Time, calendars []*ical.Calendar, todoList *todo.
 	})
 
 	if len(eventsStartingAfterNow) > 0 {
-		err := sortEventsByStartTimeAsc(eventsStartingAfterNow)
+		err := calendar.SortEventsByStartDateAscending(eventsStartingAfterNow)
 		if err != nil {
 			return nil, err
 		}

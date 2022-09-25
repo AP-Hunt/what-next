@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/AP-Hunt/what-next/m/calendar"
 	"github.com/AP-Hunt/what-next/m/scheduler"
 	ical "github.com/arran4/golang-ical"
 	"github.com/fatih/color"
@@ -42,12 +43,7 @@ func (s *ScheduleView) drawCurrentMeeting(out io.Writer) error {
 		boldWhite.Fprintf(out, "You have %d meetings happening now\n", len(s.schedule.CurrentCalendarEvents))
 		fmt.Fprintln(out)
 		for _, evt := range s.schedule.CurrentCalendarEvents {
-			start, err := evt.GetStartAt()
-			if err != nil {
-				return err
-			}
-
-			end, err := evt.GetEndAt()
+			start, end, err := calendar.EventStartAndEnd(evt)
 			if err != nil {
 				return err
 			}
@@ -84,12 +80,7 @@ func (s *ScheduleView) drawNextMeeting(out io.Writer) error {
 		fmt.Fprintln(out)
 
 		for _, evt := range s.schedule.NextCalendarEvents {
-			start, err := evt.GetStartAt()
-			if err != nil {
-				return err
-			}
-
-			end, err := evt.GetEndAt()
+			start, end, err := calendar.EventStartAndEnd(evt)
 			if err != nil {
 				return err
 			}
