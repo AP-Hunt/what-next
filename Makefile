@@ -53,21 +53,21 @@ version:
 	@echo "    make bump_minor P=beta-1"
 .PHONY: bump_major
 bump_major:
-	@EXTRA_ARGS=""
-	@if [ ! -z "${P:-}" ]; then EXTRA_ARGS="-r ${P}"; fi
-	@./semver.sh -v "${VERSION}" -M ${EXTRA_ARGS} > "${VERSION_FILE}"
+	@EXTRA_ARGS=""; \
+	if [ ! -z "$${P}" ]; then EXTRA_ARGS="-r $${P}"; fi; \
+	./semver.sh -v "${VERSION}" -M $${EXTRA_ARGS} > "${VERSION_FILE}"
 
 .PHONY: bump_minor
 bump_minor:
-	@EXTRA_ARGS=""
-	@if [ ! -z "${P:-}" ]; then EXTRA_ARGS="-r ${P}"; fi
-	@./semver.sh -v "${VERSION}" -m ${EXTRA_ARGS} > "${VERSION_FILE}"
+	@EXTRA_ARGS=""; \
+	if [ ! -z "$${P}" ]; then EXTRA_ARGS="-r $${P}"; fi; \
+	./semver.sh -v "${VERSION}" -m $${EXTRA_ARGS} > "${VERSION_FILE}"
 
 .PHONY: bump_patch
 bump_patch:
-	@EXTRA_ARGS=""
-	@if [ ! -z "${P:-}" ]; then EXTRA_ARGS="-r ${P}"; fi
-	@./semver.sh -v "${VERSION}" -p ${EXTRA_ARGS} > "${VERSION_FILE}"
+	@EXTRA_ARGS=""; \
+	if [ ! -z "$${P}" ]; then EXTRA_ARGS="-r $${P}"; fi; \
+	./semver.sh -v "${VERSION}" -p $${EXTRA_ARGS} > "${VERSION_FILE}"
 
 .PHONY: set_pre_release
 set_pre_release:
@@ -94,7 +94,7 @@ release:
 	@echo "on GitHub and you can edit the release notes from there."
 
 .PHONY: dist
-dist: ./vendor/
+dist: $(GO_SRC) fakes ./vendor/ $(VENDOR_DIRS)
 	if [ -d release ]; then \
   		rm -rf release; \
   	fi; \
@@ -104,7 +104,7 @@ dist: ./vendor/
   		  	GOOS="$${OS}" GOARCH="$${arch}" \
 			go build \
 				-o "release/${BIN_NAME}-${VERSION}-$${os}-$${arch}" \
-				-ldflags="-X 'main.Version=${VERSION}'" \
+				-ldflags="-X 'github.com/AP-Hunt/what-next/m/cmd.Version=${VERSION}'" \
 				.; \
   		done \
   	done; \
