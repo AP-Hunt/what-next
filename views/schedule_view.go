@@ -55,7 +55,7 @@ func (s *ScheduleView) drawCurrentMeeting(out io.Writer) error {
 				start.Minute(),
 				end.Hour(),
 				end.Minute(),
-				evt.GetProperty(ical.ComponentProperty(ical.PropertyName)).Value,
+				evt.GetProperty(ical.ComponentProperty(ical.PropertySummary)).Value,
 			)
 		}
 	}
@@ -92,7 +92,7 @@ func (s *ScheduleView) drawNextMeeting(out io.Writer) error {
 				start.Minute(),
 				end.Hour(),
 				end.Minute(),
-				evt.GetProperty(ical.ComponentProperty(ical.PropertyName)).Value,
+				evt.GetProperty(ical.ComponentProperty(ical.PropertySummary)).Value,
 			)
 		}
 	}

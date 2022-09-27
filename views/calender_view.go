@@ -49,8 +49,13 @@ func (c *CalendarView) Draw(out io.Writer) error {
 
 	for _, evt := range events {
 		evtId := evt.Id()
-		title := evt.GetProperty(ical.ComponentProperty(ical.PropertyName)).Value
-		location := evt.GetProperty(ical.ComponentProperty(ical.PropertyLocation)).Value
+
+		title := evt.GetProperty(ical.ComponentProperty(ical.PropertySummary)).Value
+
+		location := ""
+		if locationProp := evt.GetProperty(ical.ComponentProperty(ical.PropertyLocation)); locationProp != nil {
+			location = locationProp.Value
+		}
 
 		startTime, endTime, err := calendar.EventStartAndEnd(evt)
 		if err != nil {

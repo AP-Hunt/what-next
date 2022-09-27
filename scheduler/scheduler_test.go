@@ -26,7 +26,7 @@ func newEvent(now time.Time, relativeStartTime string, duration string) *ical.VE
 	}
 
 	event := ical.NewEvent(gofakeit.UUID())
-	event.SetProperty(ical.ComponentProperty(ical.PropertyName), gofakeit.Phrase())
+	event.SetProperty(ical.ComponentProperty(ical.PropertySummary), gofakeit.Phrase())
 
 	event.SetStartAt(now.Add(startTimeDurationOffset.Duration()))
 	event.SetDuration(eventDuration.Duration())
@@ -54,7 +54,7 @@ func randomEventNotHappeningNow(now time.Time) *ical.VEvent {
 		)
 
 		event = ical.NewEvent(gofakeit.UUID())
-		event.SetProperty(ical.ComponentProperty(ical.PropertyName), gofakeit.Phrase())
+		event.SetProperty(ical.ComponentProperty(ical.PropertySummary), gofakeit.Phrase())
 		event.SetStartAt(start)
 		event.SetEndAt(end)
 

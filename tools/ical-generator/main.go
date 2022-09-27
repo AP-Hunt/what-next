@@ -37,7 +37,7 @@ func main() {
 			for i := 1; i <= numEntries; i++ {
 				event := cal.AddEvent(fmt.Sprintf("evt-%d", i))
 
-				event.SetProperty(ical.ComponentProperty(ical.PropertyName), gofakeit.Phrase())
+				event.SetProperty(ical.ComponentProperty(ical.PropertySummary), gofakeit.Phrase())
 				event.SetProperty(ical.ComponentProperty(ical.PropertyLocation), fmt.Sprintf("Room %d", gofakeit.Number(0, 101)))
 
 				event.SetStartAt(gofakeit.DateRange(middayYesterday, middayTomorrow))
