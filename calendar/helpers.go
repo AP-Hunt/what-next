@@ -59,7 +59,12 @@ func EventStartAndEnd(evt *ical.VEvent) (time.Time, time.Time, error) {
 
 	end, endErr := evt.GetEndAt()
 	if endErr != nil {
-		err = fmt.Errorf("%s\ncannot fetch end time: %s", err, endErr)
+		// The specification in RFC 5545 says that an event
+		// with VEVENT with a DATE-TIME type DTSTART and no
+		// DTEND should be interpreted as starting and ending
+		// at the same time
+		// https://www.rfc-editor.org/rfc/rfc5545#section-3.6.1
+		end = start
 	}
 
 	return start, end, err

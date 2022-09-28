@@ -105,4 +105,34 @@ var _ = Describe("Helpers", func() {
 			Expect(actual).To(BeTrue())
 		})
 	})
+
+	Describe("EventStartAndEnd", func() {
+		Context("when an event has a proper start and end time", func() {
+			It("will return those", func() {
+				evt := ical.NewEvent("evt")
+				start := time.Now().Add(-10 * time.Minute).UTC()
+				evt.SetStartAt(start)
+				end := time.Now().Add(10 * time.Minute).UTC()
+				evt.SetEndAt(end)
+
+				actualStart, actualEnd, err := calendar.EventStartAndEnd(evt)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(actualStart).To(BeTemporally("~", start, 1*time.Minute))
+				Expect(actualEnd).To(BeTemporally("~", end, 1*time.Minute))
+			})
+		})
+
+		Context("when an event has a start time but no end time", func() {
+			It("will return the start and end times as the same value, as per the spec", func() {
+				evt := ical.NewEvent("evt")
+				start := time.Now().Add(-10 * time.Minute).UTC()
+				evt.SetStartAt(start)
+
+				actualStart, actualEnd, err := calendar.EventStartAndEnd(evt)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(actualStart).To(BeTemporally("~", start, 1*time.Minute))
+				Expect(actualEnd).To(BeTemporally("~", start, 1*time.Minute))
+			})
+		})
+	})
 })
