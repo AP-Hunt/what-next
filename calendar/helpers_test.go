@@ -1,6 +1,7 @@
 package calendar_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/AP-Hunt/what-next/m/calendar"
@@ -8,6 +9,28 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+func fmtDATETIME(t time.Time) string {
+	return fmt.Sprintf(
+		"%d%02d%02dT%02d%02d%02d%s",
+		t.Year(),
+		t.Month(),
+		t.Day(),
+		t.Hour(),
+		t.Minute(),
+		t.Second(),
+		t.Format("Z"),
+	)
+}
+
+func fmtDATE(t time.Time) string {
+	return fmt.Sprintf(
+		"%0d%02d%02d",
+		t.Year(),
+		t.Month(),
+		t.Day(),
+	)
+}
 
 var _ = Describe("Helpers", func() {
 	midnightToday := time.Now().Truncate(24 * time.Hour)
@@ -107,13 +130,15 @@ var _ = Describe("Helpers", func() {
 	})
 
 	Describe("EventStartAndEnd", func() {
-		Context("when an event has a proper start and end time", func() {
-			It("will return those", func() {
+
+		Context("when an event has a proper start and end time of type DATETIME", func() {
+			It("will return those times", func() {
 				evt := ical.NewEvent("evt")
-				start := time.Now().Add(-10 * time.Minute).UTC()
-				evt.SetStartAt(start)
-				end := time.Now().Add(10 * time.Minute).UTC()
-				evt.SetEndAt(end)
+				start := time.Date(2020, 01, 30, 12, 20, 00, 00, time.UTC)
+				evt.SetProperty(ical.ComponentPropertyDtStart, fmtDATETIME(start))
+
+				end := time.Date(2020, 01, 30, 12, 20, 00, 00, time.UTC)
+				evt.SetProperty(ical.ComponentPropertyDtEnd, fmtDATETIME(end))
 
 				actualStart, actualEnd, err := calendar.EventStartAndEnd(evt)
 				Expect(err).ToNot(HaveOccurred())
@@ -122,16 +147,55 @@ var _ = Describe("Helpers", func() {
 			})
 		})
 
-		Context("when an event has a start time but no end time", func() {
-			It("will return the start and end times as the same value, as per the spec", func() {
+		Context("when an event has a start time of type DATE but no end time or duration", func() {
+			It("will return the start as midnight of the date, and end as the midnight of the next day", func() {
 				evt := ical.NewEvent("evt")
-				start := time.Now().Add(-10 * time.Minute).UTC()
-				evt.SetStartAt(start)
+
+				start := time.Date(2020, 01, 30, 12, 20, 00, 00, time.UTC)
+				evt.SetProperty(ical.ComponentPropertyDtStart, fmtDATE(start))
+
+				expectedStart := time.Date(2020, 01, 30, 00, 00, 00, 00, time.UTC)
+				expectedEnd := time.Date(2020, 01, 31, 00, 00, 00, 0, time.UTC)
 
 				actualStart, actualEnd, err := calendar.EventStartAndEnd(evt)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(actualStart).To(BeTemporally("~", start, 1*time.Minute))
-				Expect(actualEnd).To(BeTemporally("~", start, 1*time.Minute))
+				Expect(actualStart).To(BeTemporally("~", expectedStart, 1*time.Minute))
+				Expect(actualEnd).To(BeTemporally("~", expectedEnd, 1*time.Minute))
+			})
+		})
+
+		Context("when an event has a start time of type DATETIME and a duration", func() {
+			It("will return the defined start time, and the end time as start + duration", func() {
+				evt := ical.NewEvent("evt")
+
+				start := time.Date(2020, 01, 30, 12, 20, 00, 00, time.UTC)
+				evt.SetProperty(ical.ComponentPropertyDtStart, fmtDATETIME(start))
+
+				evt.SetProperty("DURATION", "30M")
+
+				expectedStart := time.Date(2020, 01, 30, 12, 20, 00, 00, time.UTC)
+				expectedEnd := time.Date(2020, 01, 30, 12, 50, 00, 0, time.UTC)
+
+				actualStart, actualEnd, err := calendar.EventStartAndEnd(evt)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(actualStart).To(BeTemporally("~", expectedStart, 1*time.Minute))
+				Expect(actualEnd).To(BeTemporally("~", expectedEnd, 1*time.Minute))
+			})
+		})
+
+		Context("when an event has a start time of type DATETIME but no end time or duration", func() {
+			It("will return the start and end time as the same time", func() {
+				evt := ical.NewEvent("evt")
+
+				start := time.Date(2020, 01, 30, 12, 20, 00, 00, time.UTC)
+				evt.SetProperty(ical.ComponentPropertyDtStart, fmtDATETIME(start))
+
+				expectedStart := time.Date(2020, 01, 30, 12, 20, 00, 00, time.UTC)
+
+				actualStart, actualEnd, err := calendar.EventStartAndEnd(evt)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(actualStart).To(BeTemporally("~", expectedStart, 1*time.Minute))
+				Expect(actualEnd).To(BeTemporally("~", expectedStart, 1*time.Minute))
 			})
 		})
 	})
