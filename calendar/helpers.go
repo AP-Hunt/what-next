@@ -2,6 +2,7 @@ package calendar
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	ical "github.com/arran4/golang-ical"
@@ -68,6 +69,35 @@ func EventStartAndEnd(evt *ical.VEvent) (time.Time, time.Time, error) {
 	}
 
 	return start, end, err
+}
+
+// Date format as defined in RFC 5545
+// https://www.rfc-editor.org/rfc/rfc5545#section-3.3.4
+var RegexIcalDate *regexp.Regexp = regexp.MustCompile("^[0-9]{4}(0[1-9]|1[0-2])([0-2][0-9]|3[0-1])$")
+
+func IsAllDayEvent(evt *ical.VEvent) (bool, error) {
+	DTSTART := evt.GetProperty(ical.ComponentPropertyDtStart)
+	if DTSTART == nil {
+		return false, fmt.Errorf("cannot find %s property", ical.ComponentPropertyDtStart)
+	}
+
+	DTEND := evt.GetProperty(ical.ComponentPropertyDtEnd)
+	DURATION := evt.GetProperty("DURATION")
+
+	if DTEND != nil {
+		startMatches := RegexIcalDate.Match([]byte(DTSTART.Value))
+		endMatches := RegexIcalDate.Match([]byte(DTEND.Value))
+
+		return startMatches && endMatches, nil
+	} else {
+		// DURATION + DTSTART replaces DTSTART + DTEND
+		if DURATION != nil {
+			return false, nil
+		}
+
+		// DTSTART with no DTEND or DURATION is an all day event
+		return true, nil
+	}
 }
 
 func SortEventsByStartDateAscending(events []*ical.VEvent) error {

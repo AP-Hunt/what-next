@@ -135,4 +135,60 @@ var _ = Describe("Helpers", func() {
 			})
 		})
 	})
+
+	Describe("IsAllDayEvent", func() {
+		It("returns true when start and end values are of DATE type", func() {
+			evt := ical.NewEvent("evt")
+			evt.SetProperty(ical.ComponentPropertyDtStart, "20200130")
+			evt.SetProperty(ical.ComponentPropertyDtEnd, "20200130")
+
+			actual, err := calendar.IsAllDayEvent(evt)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actual).To(BeTrue())
+		})
+
+		It("returns false when start is of type DATE and end is of type DATETIME", func() {
+			evt := ical.NewEvent("evt")
+			evt.SetProperty(ical.ComponentPropertyDtStart, "20200130")
+			evt.SetProperty(ical.ComponentPropertyDtEnd, "20200130T045200Z")
+
+			actual, err := calendar.IsAllDayEvent(evt)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actual).To(BeFalse())
+		})
+
+		It("returns false when start is of type DATETIME and end is of type DATE", func() {
+			evt := ical.NewEvent("evt")
+			evt.SetProperty(ical.ComponentPropertyDtStart, "20200130T013055Z")
+			evt.SetProperty(ical.ComponentPropertyDtEnd, "20200130")
+
+			actual, err := calendar.IsAllDayEvent(evt)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actual).To(BeFalse())
+		})
+
+		It("returns true when start is present but has no end time or duration", func() {
+			evt := ical.NewEvent("evt")
+			evt.SetProperty(ical.ComponentPropertyDtStart, "20200130")
+
+			actual, err := calendar.IsAllDayEvent(evt)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actual).To(BeTrue())
+		})
+
+		It("returns false when the event has start and duration properties", func() {
+			evt := ical.NewEvent("evt")
+			evt.SetProperty(ical.ComponentPropertyDtStart, "20200130")
+			evt.SetProperty("DURATION", "30M")
+
+			actual, err := calendar.IsAllDayEvent(evt)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actual).To(BeFalse())
+		})
+	})
 })
