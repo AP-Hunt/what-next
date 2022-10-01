@@ -146,8 +146,29 @@ var CalendarRemoveCmd = &cobra.Command{
 	},
 }
 
+var CalendarListCmd = &cobra.Command{
+	Use:     "list",
+	Aliases: []string{"l"},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		var ctx context.CommandContext = cmd.Context().(context.CommandContext)
+
+		viewEngine := ctx.ViewEngine()
+		calService := ctx.CalendarService()
+
+		calendars, err := calService.GetAllCalendars()
+		if err != nil {
+			return err
+		}
+
+		calListView := views.CalendarListView{}
+		calListView.SetData(calendars)
+		return viewEngine.Draw(&calListView)
+	},
+}
+
 func init() {
 	CalendarRootCmd.AddCommand(CalendarViewCmd)
 	CalendarRootCmd.AddCommand(CalendarAddCmd)
 	CalendarRootCmd.AddCommand(CalendarRemoveCmd)
+	CalendarRootCmd.AddCommand(CalendarListCmd)
 }
