@@ -19,7 +19,7 @@ var midnightTomorrow = midnightToday.Add(24 * time.Hour)
 var RegexIcalDate *regexp.Regexp = regexp.MustCompile("^[0-9]{4}(0[1-9]|1[0-2])([0-2][0-9]|3[0-1])$")
 
 func EventStartsToday(evt *ical.VEvent) (bool, error) {
-	start, err := evt.GetStartAt()
+	start, _, err := EventStartAndEnd(evt)
 	if err != nil {
 		return false, err
 	}
@@ -30,7 +30,7 @@ func EventStartsToday(evt *ical.VEvent) (bool, error) {
 }
 
 func EventEndsToday(evt *ical.VEvent) (bool, error) {
-	end, err := evt.GetEndAt()
+	_, end, err := EventStartAndEnd(evt)
 	if err != nil {
 		return false, err
 	}
@@ -189,4 +189,16 @@ func SortEventsByStartDateAscending(events []*ical.VEvent) error {
 	})
 
 	return err
+}
+
+func FilterEvents(events []*ical.VEvent, filter func(evt *ical.VEvent) bool) []*ical.VEvent {
+	filtered := []*ical.VEvent{}
+
+	for _, evt := range events {
+		if filter(evt) {
+			filtered = append(filtered, evt)
+		}
+	}
+
+	return filtered
 }

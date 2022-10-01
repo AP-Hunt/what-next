@@ -37,7 +37,18 @@ func GenerateSchedule(now time.Time, calendars []*ical.Calendar, todoList *todo.
 		}
 	}
 
-	for _, event := range allEvents {
+	eventsForConsideration := calendar.FilterEvents(allEvents, func(evt *ical.VEvent) bool {
+		startsToday, err := calendar.EventStartsToday(evt)
+		endsToday, err := calendar.EventEndsToday(evt)
+
+		if err != nil {
+			return false
+		}
+
+		return startsToday || endsToday
+	})
+
+	for _, event := range eventsForConsideration {
 		isHappening, err := calendar.EventIsCurrentlyHappening(event, now)
 
 		if err != nil {
@@ -50,7 +61,7 @@ func GenerateSchedule(now time.Time, calendars []*ical.Calendar, todoList *todo.
 	}
 
 	eventsStartingAfterNow := []*ical.VEvent{}
-	for _, event := range allEvents {
+	for _, event := range eventsForConsideration {
 		start, err := event.GetStartAt()
 		if err != nil {
 			return nil, err

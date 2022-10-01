@@ -200,6 +200,22 @@ var _ = Describe("Scheduler", func() {
 				})
 			})
 
+			Context("but the next one starts tomorrow", func() {
+				It("the schedule will not contain any calendar events in the NextCalendarEvents field and the TimeUntilNextCalendarEvent field will be nil", func() {
+					cal := generateCalendar(
+						newEvent(now, "36h", "1h"),
+					)
+
+					todoList := todo.NewTodoItemCollection([]*todo.TodoItem{})
+
+					schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{cal}, todoList)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(schedule.NextCalendarEvents).To(BeEmpty())
+					Expect(schedule.TimeUntilNextCalendarEvent).To(BeNil())
+				})
+			})
+
 			It("the schedule will contain the duration of time until the next calendar event in the TimeUntilNextCalendarEvent field", func() {
 				nextEvent := newEvent(now, "4h", "20m")
 				cal := generateCalendar(
