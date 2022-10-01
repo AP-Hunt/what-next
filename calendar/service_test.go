@@ -142,4 +142,21 @@ var _ = Describe("Service", func() {
 			Expect(fetchedRecord.DisplayName).To(Equal("test name"))
 		})
 	})
+
+	Describe("RemoveById", func() {
+		It("will remove a previously added calendar", func() {
+			calPath, err := fakeCalFilePath()
+			Expect(err).ToNot(HaveOccurred())
+
+			addedRecord, err := calendarSvc.AddCalendar("file://"+calPath, "test name")
+			Expect(err).ToNot(HaveOccurred())
+
+			err = calendarSvc.RemoveById(addedRecord.Id)
+			Expect(err).ToNot(HaveOccurred())
+
+			shouldNotBeFound, err := calendarSvc.GetCalendarByDisplayName("test name")
+			Expect(err).To(HaveOccurred())
+			Expect(shouldNotBeFound).To(BeNil())
+		})
+	})
 })

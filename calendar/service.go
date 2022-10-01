@@ -19,6 +19,7 @@ type CalendarServiceInterface interface {
 	AddCalendar(url string, displayName string) (*CalendarRecord, error)
 	GetCalendarByDisplayName(displayName string) (*CalendarRecord, error)
 	GetAllCalendars() ([]CalendarRecord, error)
+	RemoveById(id int) error
 }
 
 type CalendarService struct {
@@ -133,4 +134,32 @@ func (c *CalendarService) GetAllCalendars() ([]CalendarRecord, error) {
 	}
 
 	return records, nil
+}
+
+func (c *CalendarService) RemoveById(id int) error {
+	_, err := db.InTransaction(
+		func(tx *sqlx.Tx) (*int, error) {
+			result, err := tx.Exec(
+				`
+				DELETE FROM calendars
+				WHERE id = ?
+				`,
+				id,
+			)
+
+			rowsAffected, err := result.RowsAffected()
+
+			if err != nil {
+				errVal := -1
+				return &errVal, err
+			}
+
+			intRowsAffected := int(rowsAffected)
+			return &intRowsAffected, err
+		},
+		c.db,
+		c.ctx,
+	)
+
+	return err
 }

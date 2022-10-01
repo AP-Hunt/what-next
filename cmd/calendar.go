@@ -116,7 +116,38 @@ var CalendarAddCmd = &cobra.Command{
 	},
 }
 
+var CalendarRemoveCmd = &cobra.Command{
+	Use:     "remove display_name",
+	Args:    cobra.ExactArgs(1),
+	Aliases: []string{"r"},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		var ctx context.CommandContext = cmd.Context().(context.CommandContext)
+		calService := ctx.CalendarService()
+
+		displayName := args[0]
+
+		cal, err := calService.GetCalendarByDisplayName(displayName)
+		if err != nil {
+			if _, ok := err.(*calendar.ErrNotFound); ok {
+				fmt.Printf("Cannot find calendar with display name '%s'.\n", displayName)
+				return nil
+			}
+
+			return err
+		}
+
+		err = calService.RemoveById(cal.Id)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Calendar '%s' removed.\n", displayName)
+		return nil
+	},
+}
+
 func init() {
 	CalendarRootCmd.AddCommand(CalendarViewCmd)
 	CalendarRootCmd.AddCommand(CalendarAddCmd)
+	CalendarRootCmd.AddCommand(CalendarRemoveCmd)
 }
