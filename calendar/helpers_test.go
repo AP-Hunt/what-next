@@ -85,6 +85,7 @@ var _ = Describe("Helpers", func() {
 	Describe("EventEndsToday", func() {
 		It("returns false if event ends before midnight today", func() {
 			evt := ical.NewEvent("evt")
+			evt.SetStartAt(midnightToday.Add(-5 * time.Hour))
 			evt.SetEndAt(midnightToday.Add(-4 * time.Hour))
 
 			actual, err := calendar.EventEndsToday(evt)
@@ -94,6 +95,7 @@ var _ = Describe("Helpers", func() {
 
 		It("returns false if event ends after midnight tomorrow", func() {
 			evt := ical.NewEvent("evt")
+			evt.SetStartAt(midnightToday.Add(1 * time.Hour))
 			evt.SetEndAt(midnightToday.Add(36 * time.Hour))
 
 			actual, err := calendar.EventEndsToday(evt)
@@ -103,6 +105,7 @@ var _ = Describe("Helpers", func() {
 
 		It("returns false if event ends at midnight tomorrow", func() {
 			evt := ical.NewEvent("evt")
+			evt.SetStartAt(midnightToday.Add(1 * time.Hour))
 			evt.SetEndAt(midnightToday.Add(24 * time.Hour))
 
 			actual, err := calendar.EventEndsToday(evt)
@@ -112,6 +115,7 @@ var _ = Describe("Helpers", func() {
 
 		It("returns true if event ends between midnight today and midnight tomorrow", func() {
 			evt := ical.NewEvent("evt")
+			evt.SetStartAt(midnightToday.Add(4 * time.Hour))
 			evt.SetEndAt(midnightToday.Add(6 * time.Hour))
 
 			actual, err := calendar.EventEndsToday(evt)
@@ -121,6 +125,7 @@ var _ = Describe("Helpers", func() {
 
 		It("returns true if event ends at midnight today", func() {
 			evt := ical.NewEvent("evt")
+			evt.SetStartAt(midnightToday.Add(-2 * time.Hour))
 			evt.SetEndAt(midnightToday)
 
 			actual, err := calendar.EventEndsToday(evt)
