@@ -12,13 +12,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go_version: [ "^1", "^1.17" ]
+        go_version: [ "^1", "^1.19" ]
     steps:
       - uses: actions/checkout@v2 # Trusted creator
       - uses: actions/setup-go@v2 # Trusted creator
         with:
           check-latest: true
           go-version: ${{ matrix.go_version }}
+
+      - name: "Install Ginkgo binary"
+        run: cd ../ && go install github.com/onsi/ginkgo/v2/ginkgo@latest
 
       - name: "Run tests"
         run: make test

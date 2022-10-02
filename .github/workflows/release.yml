@@ -15,7 +15,13 @@ jobs:
       - uses: actions/setup-go@v2 # Trusted creator
         with:
           check-latest: true
-          go-version: "^1.17"
+          go-version: "^1.19"
+
+      - name: "Install Ginkgo binary"
+        run: cd ../ && go install github.com/onsi/ginkgo/v2/ginkgo@latest
+
+      - name: "Run tests"
+        run: make test
 
       - name: "Compile release"
         run: make dist
