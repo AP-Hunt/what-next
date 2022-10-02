@@ -31,8 +31,17 @@ fakes:
 
 ## Test targets
 .PHONY: test
-test: ./vendor/
-	go test ./...
+test: fake.ical fakes unit_test integration_test
+
+.PHONY: unit_test
+unit_test: ./vendor/
+	ginkgo --skip-package "integration_test" ./...
+
+.PHONY: integration_test
+integration_test: $OUT_PATH
+	ginkgo ./integration_test -- --binary "../${OUT_PATH}"
+
+fake.ical: fake-calendar
 
 ## Dev targets
 .PHONY: set-env
