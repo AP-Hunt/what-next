@@ -1,5 +1,7 @@
 package todo
 
+import "golang.org/x/exp/slices"
+
 type TodoItemCollection struct {
 	items []*TodoItem
 }
@@ -41,4 +43,30 @@ func (c *TodoItemCollection) Append(other *TodoItemCollection) *TodoItemCollecti
 	}
 
 	return NewTodoItemCollection(aItems)
+}
+
+func (c *TodoItemCollection) SortByDueDateAsc() *TodoItemCollection {
+	items := c.items
+
+	slices.SortFunc(items, func(a *TodoItem, b *TodoItem) bool {
+		// Both tasks don't have a due date
+		if a.DueDate == nil && b.DueDate == nil {
+			// Sort by ID on the assumption that smaller IDs are older tasks
+			return a.Id < b.Id
+		}
+
+		// Tasks with a due date go higher
+		if a.DueDate != nil && b.DueDate == nil {
+			return true
+		}
+
+		if a.DueDate == nil && b.DueDate != nil {
+			return false
+		}
+
+		// Both due dates are populated
+		return a.DueDate.Before(*b.DueDate) || a.DueDate.Equal(*b.DueDate)
+	})
+
+	return NewTodoItemCollection(items)
 }

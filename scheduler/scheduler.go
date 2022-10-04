@@ -115,6 +115,8 @@ func GenerateSchedule(now time.Time, calendars []*ical.Calendar, todoList *todo.
 		schedule.AchievableTasks = *tasksForConsideration
 	}
 
+	schedule.AchievableTasks = *schedule.AchievableTasks.SortByDueDateAsc()
+
 	return schedule, nil
 }
 

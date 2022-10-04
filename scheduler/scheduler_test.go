@@ -347,6 +347,51 @@ var _ = Describe("Scheduler", func() {
 				Expect(schedule.AchievableTasks.Enumerate()).ToNot(ContainElement(taskWithDueDateInThePast))
 			})
 
+			It("will order tasks by due date ascending, with tasks without due dates at the end", func() {
+				cal := generateCalendar(
+					newEvent(now, "-1h", "2h"),
+				)
+
+				aWeekToday := now.Add(7 * 24 * time.Hour)
+				taskA := &todo.TodoItem{
+					Id:        1,
+					Action:    "A",
+					DueDate:   &aWeekToday,
+					Duration:  nil,
+					Completed: false,
+				}
+
+				twoWeeksToday := now.Add(14 * 24 * time.Hour)
+				taskB := &todo.TodoItem{
+					Id:        2,
+					Action:    "B",
+					DueDate:   &twoWeeksToday,
+					Duration:  nil,
+					Completed: false,
+				}
+
+				threeWeeksToday := now.Add(21 * 24 * time.Hour)
+				taskC := &todo.TodoItem{
+					Id:        3,
+					Action:    "C",
+					DueDate:   &threeWeeksToday,
+					Duration:  nil,
+					Completed: false,
+				}
+
+				tasks := todo.NewTodoItemCollection([]*todo.TodoItem{taskB, taskC, taskA})
+
+				schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{cal}, tasks)
+				Expect(err).ToNot(HaveOccurred())
+
+				scheduledTasks := schedule.AchievableTasks.Enumerate()
+				actions := []string{}
+				for _, task := range scheduledTasks {
+					actions = append(actions, task.Action)
+				}
+				Expect(actions).To(Equal([]string{"A", "B", "C"}))
+			})
+
 			Context("when there are no more meetings in the day", func() {
 				calWithoutFutureEvents := generateCalendar(
 					newEvent(now, "-2h", "30m"),
