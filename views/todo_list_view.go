@@ -36,7 +36,7 @@ func (v *TodoListView) Draw(out io.Writer) error {
 	tbl.SetStyle(simpletable.StyleCompactLite)
 
 	textWrapper := textwrap.NewTextWrap()
-	textWrapper.SetWidth(30)
+	textWrapper.SetWidth(75)
 
 	durationWrapper := textwrap.NewTextWrap()
 	durationWrapper.SetWidth(30)
