@@ -30,7 +30,13 @@ func CreateDefaultCommandContext(parentContext context.Context) (CommandContext,
 	ctx = ctx.
 		WithTodoRepository(todo.NewTodoSQLRepository(database, ctx)).
 		WithViewEngine(&views.StdOutViewEngine{}).
-		WithCalendarService(calendar.NewCalendarService(database, ctx))
+		WithCalendarService(
+			calendar.NewCalendarService(
+				database,
+				calendar.NewCalendarCache(viper.GetString(CFG_KEY_DATA_DIR)),
+				ctx,
+			),
+		)
 
 	return ctx, nil
 }

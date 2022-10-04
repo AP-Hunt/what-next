@@ -26,9 +26,10 @@ type CalendarService struct {
 	httpClient *http.Client
 	db         *sqlx.DB
 	ctx        context.Context
+	cache      CalendarCacheInterface
 }
 
-func NewCalendarService(dbConection *sqlx.DB, ctx context.Context) *CalendarService {
+func NewCalendarService(dbConection *sqlx.DB, cache CalendarCacheInterface, ctx context.Context) *CalendarService {
 	transport := &http.Transport{}
 	transport.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
 
@@ -38,10 +39,39 @@ func NewCalendarService(dbConection *sqlx.DB, ctx context.Context) *CalendarServ
 		httpClient: client,
 		db:         dbConection,
 		ctx:        ctx,
+		cache:      cache,
 	}
 }
 
 func (c *CalendarService) OpenCalendar(url string) (*ical.Calendar, error) {
+	cachedCal, err := c.cache.Get(url)
+	cacheMiss := false
+	if err == nil {
+		return c.parseCalFromBytes(cachedCal)
+	} else {
+		if _, ok := err.(*ErrCacheMiss); ok {
+			cacheMiss = true
+		} else {
+			return nil, err
+		}
+	}
+
+	calBytes, err := c.fetchCalendarOverNetwork(url)
+	if err != nil {
+		return nil, err
+	}
+
+	if cacheMiss {
+		err := c.cache.Put(url, calBytes)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return c.parseCalFromBytes(calBytes)
+}
+
+func (c *CalendarService) fetchCalendarOverNetwork(url string) ([]byte, error) {
 	resp, err := c.httpClient.Get(url)
 
 	if err != nil {
@@ -64,7 +94,12 @@ func (c *CalendarService) OpenCalendar(url string) (*ical.Calendar, error) {
 		return nil, fmt.Errorf("empty response from url '%s'", url)
 	}
 
-	cal, err := ical.ParseCalendar(&buf)
+	return buf.Bytes(), nil
+}
+
+func (c *CalendarService) parseCalFromBytes(bs []byte) (*ical.Calendar, error) {
+	byteBuf := bytes.NewBuffer(bs)
+	cal, err := ical.ParseCalendar(byteBuf)
 	if err != nil {
 		return nil, fmt.Errorf("parse calendar: %s", err)
 	}
@@ -73,9 +108,14 @@ func (c *CalendarService) OpenCalendar(url string) (*ical.Calendar, error) {
 }
 
 func (c *CalendarService) AddCalendar(url string, displayName string) (*CalendarRecord, error) {
-	_, err := c.OpenCalendar(url)
+	calBytes, err := c.fetchCalendarOverNetwork(url)
 	if err != nil {
 		return nil, fmt.Errorf("open calendar '%s': %s", url, err)
+	}
+
+	_, err = c.parseCalFromBytes(calBytes)
+	if err != nil {
+		return nil, err
 	}
 
 	_, err = c.GetCalendarByDisplayName(displayName)

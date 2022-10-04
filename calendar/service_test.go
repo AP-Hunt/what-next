@@ -2,6 +2,7 @@ package calendar_test
 
 import (
 	"context"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -10,11 +11,14 @@ import (
 	"path/filepath"
 
 	. "github.com/AP-Hunt/what-next/m/calendar"
+	"github.com/AP-Hunt/what-next/m/calendar/fakes"
 	"github.com/AP-Hunt/what-next/m/db"
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/pressly/goose/v3"
+
+	ical "github.com/arran4/golang-ical"
 )
 
 func fakeCalFilePath() (string, error) {
@@ -34,8 +38,9 @@ func fakeCalFilePath() (string, error) {
 var _ = Describe("Service", func() {
 	goose.SetLogger(goose.NopLogger())
 	var (
-		inMemoryConn *sqlx.DB
-		calendarSvc  *CalendarService
+		inMemoryConn  *sqlx.DB
+		calendarSvc   *CalendarService
+		calendarCache *fakes.FakeCalendarCacheInterface
 	)
 
 	BeforeEach(func() {
@@ -49,7 +54,9 @@ var _ = Describe("Service", func() {
 
 		inMemoryConn = conn
 
-		calendarSvc = NewCalendarService(inMemoryConn, context.Background())
+		calendarCache = &fakes.FakeCalendarCacheInterface{}
+
+		calendarSvc = NewCalendarService(inMemoryConn, calendarCache, context.Background())
 
 	})
 
@@ -58,6 +65,13 @@ var _ = Describe("Service", func() {
 	})
 
 	Describe("OpenCalendar", func() {
+		BeforeEach(func() {
+			calendarCache.GetReturns(nil, &ErrCacheMiss{
+				Key:    "test",
+				Reason: "not found",
+			})
+		})
+
 		It("can open file URLs", func() {
 			calPath, err := fakeCalFilePath()
 			Expect(err).ToNot(HaveOccurred())
@@ -79,6 +93,78 @@ var _ = Describe("Service", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(len(cal.Events())).To(BeNumerically(">=", 1))
+		})
+
+		It("will return a cached value if one is found", func() {
+			cachedCalendar := ical.NewCalendar()
+			cachedCalendar.SetName("cached-calendar")
+
+			calendarCache.GetReturns(
+				[]byte(cachedCalendar.Serialize()),
+				nil,
+			)
+
+			calPath, err := fakeCalFilePath()
+			Expect(err).ToNot(HaveOccurred())
+
+			cal, err := calendarSvc.OpenCalendar("file://" + calPath)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(len(cal.Events())).To(BeNumerically("==", 0))
+
+			var nameProp ical.CalendarProperty
+			for _, p := range cal.CalendarProperties {
+				if p.IANAToken == string(ical.PropertyName) {
+					nameProp = p
+					break
+				}
+			}
+
+			Expect(nameProp.Value).To(Equal("cached-calendar"))
+		})
+
+		Context("on a cache miss", func() {
+			It("will return a fresh copy", func() {
+				calPath, err := fakeCalFilePath()
+				Expect(err).ToNot(HaveOccurred())
+
+				calendarCache.GetReturns(
+					nil,
+					&ErrCacheMiss{
+						Key:    "test",
+						Reason: "expired",
+					},
+				)
+
+				cal, err := calendarSvc.OpenCalendar("file://" + calPath)
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(len(cal.Events())).To(BeNumerically(">=", 1))
+			})
+
+			It("will write the calendar back into the cache", func() {
+				calendarCache.GetReturns(
+					nil,
+					&ErrCacheMiss{
+						Key:    "test",
+						Reason: "expired",
+					},
+				)
+
+				calPath, err := fakeCalFilePath()
+
+				_, err = calendarSvc.OpenCalendar("file://" + calPath)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(calendarCache.PutCallCount()).To(Equal(1))
+
+				putCallUrl, putCallContent := calendarCache.PutArgsForCall(0)
+				Expect(putCallUrl).To((Equal("file://" + calPath)))
+
+				calContent, err := ioutil.ReadFile(calPath)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(string(putCallContent)).To(Equal(string(calContent)))
+			})
 		})
 	})
 
