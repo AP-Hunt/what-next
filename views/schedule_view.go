@@ -48,6 +48,9 @@ func (s *ScheduleView) drawCurrentMeeting(out io.Writer) error {
 				return err
 			}
 
+			start = start.Local()
+			end = end.Local()
+
 			fmt.Fprintf(
 				out,
 				"\t%02d%02d-%02d%02d %s\n",
@@ -84,6 +87,9 @@ func (s *ScheduleView) drawNextMeeting(out io.Writer) error {
 			if err != nil {
 				return err
 			}
+
+			start = start.Local()
+			end = end.Local()
 
 			fmt.Fprintf(
 				out,

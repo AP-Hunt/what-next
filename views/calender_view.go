@@ -72,6 +72,9 @@ func (c *CalendarView) Draw(out io.Writer) error {
 			return err
 		}
 
+		startTime = startTime.Local()
+		endTime = endTime.Local()
+
 		startStr := fmt.Sprintf("%02d%02d", startTime.Hour(), startTime.Minute())
 		endStr := fmt.Sprintf("%02d%02d", endTime.Hour(), endTime.Minute())
 		dateMarkers := " "
