@@ -47,8 +47,20 @@ func initViper() {
 		panic(err)
 	}
 
-	viper.SetDefault(CFG_KEY_DATA_DIR, homeDir)
-	viper.BindEnv(CFG_KEY_DATA_DIR)
+	whatNextDefaultDir := path.Join(homeDir, ".what-next")
+
+	if _, err := os.Stat(whatNextDefaultDir); os.IsNotExist(err) {
+		err = os.Mkdir(whatNextDefaultDir, 0760)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	viper.SetDefault(CFG_KEY_DATA_DIR, whatNextDefaultDir)
+	err = viper.BindEnv(CFG_KEY_DATA_DIR)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func initDb(dataDir string) (*sqlx.DB, error) {
