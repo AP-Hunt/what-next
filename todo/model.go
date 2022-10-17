@@ -9,3 +9,11 @@ type TodoItem struct {
 	Duration  *time.Duration
 	Completed bool
 }
+
+func (t *TodoItem) IsOverdue() bool {
+	if t.DueDate == nil {
+		return false
+	}
+
+	return t.DueDate.Before(time.Now())
+}

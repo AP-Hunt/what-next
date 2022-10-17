@@ -73,8 +73,7 @@ func GenerateSchedule(now time.Time, calendars []*ical.Calendar, todoList *todo.
 	}
 
 	tasksForConsideration := todoList.Filter(func(ti *todo.TodoItem) bool {
-		return ti.Completed == false &&
-			(ti.DueDate == nil || (ti.DueDate != nil && ti.DueDate.After(now)))
+		return ti.Completed == false
 	})
 
 	tasksWithoutDurationSet := *tasksForConsideration.Filter(func(ti *todo.TodoItem) bool {

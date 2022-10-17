@@ -2,15 +2,14 @@ package views
 
 import (
 	"fmt"
-	"io"
-	"strconv"
-	"strings"
-
 	"github.com/AP-Hunt/what-next/m/todo"
 	"github.com/alexeyco/simpletable"
+	"github.com/fatih/color"
 	"github.com/golang-module/carbon/v2"
 	"github.com/hako/durafmt"
 	"github.com/isbm/textwrap"
+	"io"
+	"strconv"
 )
 
 type TodoListView struct {
@@ -35,6 +34,8 @@ func (v *TodoListView) Draw(out io.Writer) error {
 	}
 	tbl.SetStyle(simpletable.StyleCompactLite)
 
+	overdueStyle := color.New(color.FgRed, color.Bold)
+
 	textWrapper := textwrap.NewTextWrap()
 	textWrapper.SetWidth(75)
 
@@ -42,8 +43,7 @@ func (v *TodoListView) Draw(out io.Writer) error {
 	durationWrapper.SetWidth(30)
 
 	for _, item := range v.todoItems.Enumerate() {
-		textLines := textWrapper.Wrap(item.Action)
-		multiLineText := strings.Join(textLines, "\n")
+		formattedAction := textWrapper.Fill(item.Action)
 
 		due := ""
 		if item.DueDate != nil {
@@ -60,20 +60,23 @@ func (v *TodoListView) Draw(out io.Writer) error {
 			}
 		}
 
+		if item.IsOverdue() {
+			due = overdueStyle.Sprint(due)
+		}
+
 		duration := ""
 		if item.Duration != nil {
 			duration = durafmt.Parse(*item.Duration).String()
 		}
 
-		durationLines := durationWrapper.Wrap(duration)
-		multiLineDuration := strings.Join(durationLines, "\n")
+		formattedDuration := durationWrapper.Fill(duration)
 
 		row := []*simpletable.Cell{
 			{Align: simpletable.AlignRight, Text: strconv.Itoa(item.Id)},
 			{Align: simpletable.AlignCenter, Text: todoCompletedSymbolMap[item.Completed]},
 			{Align: simpletable.AlignLeft, Text: due},
-			{Align: simpletable.AlignLeft, Text: multiLineDuration},
-			{Align: simpletable.AlignLeft, Text: multiLineText},
+			{Align: simpletable.AlignLeft, Text: formattedDuration},
+			{Align: simpletable.AlignLeft, Text: formattedAction},
 		}
 
 		tbl.Body.Cells = append(tbl.Body.Cells, row)

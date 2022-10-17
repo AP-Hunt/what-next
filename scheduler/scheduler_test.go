@@ -325,7 +325,7 @@ var _ = Describe("Scheduler", func() {
 				Expect(schedule.AchievableTasks.Enumerate()).To(ContainElement(taskHasNoDuration))
 			})
 
-			It("will only contain tasks whose due date is in the future, if one is set", func() {
+			It("will only contain both tasks that are overdue, and due in the future, if one is set", func() {
 				thePast := time.Date(2020, 01, 01, 00, 00, 00, 00, time.Local)
 				theFuture := now.AddDate(0, 0, 1)
 
@@ -344,7 +344,7 @@ var _ = Describe("Scheduler", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(schedule.AchievableTasks.Enumerate()).To(ContainElement(taskWithDueDateInTheFuture))
-				Expect(schedule.AchievableTasks.Enumerate()).ToNot(ContainElement(taskWithDueDateInThePast))
+				Expect(schedule.AchievableTasks.Enumerate()).To(ContainElement(taskWithDueDateInThePast))
 			})
 
 			It("will order tasks by due date ascending, with tasks without due dates at the end", func() {
@@ -397,7 +397,7 @@ var _ = Describe("Scheduler", func() {
 					newEvent(now, "-2h", "30m"),
 				)
 
-				It("will contain all tasks which have no due date set, or a due date in the future, without consideration of duration", func() {
+				It("will contain all incomplete tasks which without consideration of duration", func() {
 					thePast := time.Date(2020, 01, 01, 00, 00, 00, 00, time.Local)
 					theFuture := now.AddDate(0, 0, 1)
 
@@ -419,7 +419,7 @@ var _ = Describe("Scheduler", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(schedule.AchievableTasks.Enumerate()).To(ContainElement(taskWithDueDateInTheFuture))
-					Expect(schedule.AchievableTasks.Enumerate()).ToNot(ContainElement(taskWithDueDateInThePast))
+					Expect(schedule.AchievableTasks.Enumerate()).To(ContainElement(taskWithDueDateInThePast))
 					Expect(schedule.AchievableTasks.Enumerate()).To(ContainElement(taskWithNoDueDate))
 				})
 			})
