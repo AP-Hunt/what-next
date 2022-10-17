@@ -202,3 +202,8 @@ func FilterEvents(events []*ical.VEvent, filter func(evt *ical.VEvent) bool) []*
 
 	return filtered
 }
+
+func IsRecurringEventDefinition(evt *ical.VEvent) bool {
+	prop := evt.GetProperty(ical.ComponentProperty("RRULE"))
+	return prop != nil
+}

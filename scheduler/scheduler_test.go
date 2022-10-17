@@ -425,22 +425,49 @@ var _ = Describe("Scheduler", func() {
 			})
 		})
 
-		It("CurrentCalendarEvents and NextCalendarEvents fields will contain events from all input calendars", func() {
-			currentEventInCalA := newEvent(now, "-30m", "1h")
-			currentEventInCalB := newEvent(now, "-60m", "1h30m")
-			nextEventInCalA := newEvent(now, "2h", "10m")
-			nextEventInCalB := newEvent(now, "2h", "30m")
+		Describe("CurrentCalendarEvents and NextCalendarEvents fields", func() {
+			It("will contain events from all input calendars", func() {
+				currentEventInCalA := newEvent(now, "-30m", "1h")
+				currentEventInCalB := newEvent(now, "-60m", "1h30m")
+				nextEventInCalA := newEvent(now, "2h", "10m")
+				nextEventInCalB := newEvent(now, "2h", "30m")
 
-			calA := generateCalendar(currentEventInCalA, nextEventInCalA)
-			calB := generateCalendar(currentEventInCalB, nextEventInCalB)
+				calA := generateCalendar(currentEventInCalA, nextEventInCalA)
+				calB := generateCalendar(currentEventInCalB, nextEventInCalB)
 
-			tasks := todo.NewTodoItemCollection([]*todo.TodoItem{})
+				tasks := todo.NewTodoItemCollection([]*todo.TodoItem{})
 
-			schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{calA, calB}, tasks)
-			Expect(err).ToNot(HaveOccurred())
+				schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{calA, calB}, tasks)
+				Expect(err).ToNot(HaveOccurred())
 
-			Expect(schedule.CurrentCalendarEvents).To(ContainElements(currentEventInCalA, currentEventInCalB))
-			Expect(schedule.NextCalendarEvents).To(ContainElements(nextEventInCalA, nextEventInCalB))
+				Expect(schedule.CurrentCalendarEvents).To(ContainElements(currentEventInCalA, currentEventInCalB))
+				Expect(schedule.NextCalendarEvents).To(ContainElements(nextEventInCalA, nextEventInCalB))
+			})
+
+			It("will not contain recurring event definitions; only instances of a recurring event", func() {
+				nowRecurringEventDef := newEvent(now, "-30m", "1h")
+				nowRecurringEventDef.AddRrule("FREQ=WEEKLY;BYDAY=TU")
+
+				nowRecurringEventInstance := newEvent(now, "-30m", "1h")
+				nowRecurringEventInstance.AddProperty(ical.ComponentProperty("RECURRENCE-ID"), "202020101T120000Z")
+
+				nextRecurringEventDef := newEvent(now, "2h", "30m")
+				nextRecurringEventDef.AddRrule("FREQ=WEEKLY;BYDAY=TU")
+
+				nextRecurringEventInstance := newEvent(now, "2h", "30m")
+				nextRecurringEventInstance.AddProperty(ical.ComponentProperty("RECURRENCE-ID"), "202020101T120000Z")
+
+				cal := generateCalendar(nowRecurringEventDef, nowRecurringEventInstance, nextRecurringEventDef, nextRecurringEventInstance)
+
+				tasks := todo.NewTodoItemCollection([]*todo.TodoItem{})
+
+				schedule, err := scheduler.GenerateSchedule(now, []*ical.Calendar{cal}, tasks)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(schedule.CurrentCalendarEvents).To(ConsistOf(nowRecurringEventInstance))
+				Expect(schedule.NextCalendarEvents).To(ConsistOf(nextRecurringEventInstance))
+			})
 		})
+
 	})
 })

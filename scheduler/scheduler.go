@@ -45,7 +45,9 @@ func GenerateSchedule(now time.Time, calendars []*ical.Calendar, todoList *todo.
 			return false
 		}
 
-		return startsToday || endsToday
+		isRecurringDef := calendar.IsRecurringEventDefinition(evt)
+
+		return (startsToday || endsToday) && !isRecurringDef
 	})
 
 	for _, event := range eventsForConsideration {

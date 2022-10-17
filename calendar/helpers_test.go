@@ -260,4 +260,23 @@ var _ = Describe("Helpers", func() {
 			Expect(actual).To(BeFalse())
 		})
 	})
+
+	Describe("IsRecurringEventDefinition", func() {
+		It("will return false when the event doesn't have an RRULE property", func() {
+			evt := ical.NewEvent("evt")
+
+			actual := calendar.IsRecurringEventDefinition(evt)
+
+			Expect(actual).To(BeFalse())
+		})
+
+		It("will return true when the event has an RRULE property", func() {
+			evt := ical.NewEvent("evt")
+			evt.AddRrule("FREQ=WEEKLY;BYDAY=TU")
+
+			actual := calendar.IsRecurringEventDefinition(evt)
+
+			Expect(actual).To(BeTrue())
+		})
+	})
 })
