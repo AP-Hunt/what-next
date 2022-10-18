@@ -18,7 +18,7 @@ jobs:
           go-version: "^1.19"
 
       - name: "Install Ginkgo binary"
-        run: cd ../ && go install github.com/onsi/ginkgo/v2/ginkgo@latest
+        run: go install "github.com/onsi/ginkgo/v2/ginkgo@$(grep 'ginkgo/v2' go.mod | awk '{print $2}')"
 
       - name: "Run tests"
         run: make test
