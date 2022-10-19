@@ -19,9 +19,6 @@ jobs:
         with:
           check-latest: true
           go-version: ${{ matrix.go_version }}
-
-      - name: "Install Ginkgo binary"
-        run: go install "github.com/onsi/ginkgo/v2/ginkgo@$(grep 'ginkgo/v2' go.mod | awk '{print $2}')"
-
+          
       - name: "Run tests"
         run: make test
