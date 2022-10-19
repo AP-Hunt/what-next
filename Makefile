@@ -35,11 +35,11 @@ test: fake.ical fakes unit_test integration_test
 
 .PHONY: unit_test
 unit_test: ./vendor/
-	ginkgo --skip-package "integration_test" ./...
+	go run github.com/onsi/ginkgo/v2/ginkgo --skip-package "integration_test" ./...
 
 .PHONY: integration_test
 integration_test: $OUT_PATH
-	ginkgo ./integration_test -- --binary "../${OUT_PATH}"
+	go run github.com/onsi/ginkgo/v2/ginkgo ./integration_test -- --binary "../${OUT_PATH}"
 
 fake.ical: fake-calendar
 
@@ -60,6 +60,7 @@ version:
 	@echo "Use the bump_major, bump_minor, bump_patch, and set_pre_release targets to manage the project version"
 	@echo "To set the pre-release version in each, set the P variable e.g."
 	@echo "    make bump_minor P=beta-1"
+
 .PHONY: bump_major
 bump_major:
 	@EXTRA_ARGS=""; \
