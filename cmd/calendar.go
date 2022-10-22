@@ -10,7 +10,6 @@ import (
 	"github.com/AP-Hunt/what-next/m/views"
 	ical "github.com/arran4/golang-ical"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
 )
 
 var CalendarRootCmd = &cobra.Command{
@@ -83,13 +82,9 @@ var CalendarAddCmd = &cobra.Command{
 		}
 
 		calendarUrl := args[1]
-		parsedUrl, err := url.Parse(calendarUrl)
+		_, err := url.Parse(calendarUrl)
 		if err != nil {
 			return err
-		}
-
-		if !slices.Contains([]string{"http", "https", "file"}, parsedUrl.Scheme) {
-			return fmt.Errorf("unsupported scheme '%s'", parsedUrl.Scheme)
 		}
 
 		return nil
@@ -111,7 +106,7 @@ var CalendarAddCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("Added calendar %s (%s)", displayName, url)
+		fmt.Printf("Added calendar %s (%s)\n", displayName, url)
 		return nil
 	},
 }

@@ -7,6 +7,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"os"
+	"path"
+	"path/filepath"
 
 	"github.com/AP-Hunt/what-next/m/db"
 	ical "github.com/arran4/golang-ical"
@@ -44,6 +48,12 @@ func NewCalendarService(dbConection *sqlx.DB, cache CalendarCacheInterface, ctx 
 }
 
 func (c *CalendarService) OpenCalendar(url string) (*ical.Calendar, error) {
+	qualifiedUrl, err := c.resolveUrl(url)
+	if err != nil {
+		return nil, err
+	}
+	url = qualifiedUrl.String()
+
 	cachedCal, err := c.cache.Get(url)
 	cacheMiss := false
 	if err == nil {
@@ -69,6 +79,30 @@ func (c *CalendarService) OpenCalendar(url string) (*ical.Calendar, error) {
 	}
 
 	return c.parseCalFromBytes(calBytes)
+}
+
+func (c *CalendarService) resolveUrl(maybeUrl string) (*url.URL, error) {
+	u, err := url.Parse(maybeUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	if u.Scheme == "" {
+		wd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+
+		absPath, err := filepath.Abs(path.Join(wd, u.Path))
+		if err != nil {
+			return nil, err
+		}
+
+		u.Scheme = "file"
+		u.Path = absPath
+	}
+
+	return u, nil
 }
 
 func (c *CalendarService) fetchCalendarOverNetwork(url string) ([]byte, error) {
@@ -108,6 +142,12 @@ func (c *CalendarService) parseCalFromBytes(bs []byte) (*ical.Calendar, error) {
 }
 
 func (c *CalendarService) AddCalendar(url string, displayName string) (*CalendarRecord, error) {
+	qualifiedUrl, err := c.resolveUrl(url)
+	if err != nil {
+		return nil, err
+	}
+	url = qualifiedUrl.String()
+
 	calBytes, err := c.fetchCalendarOverNetwork(url)
 	if err != nil {
 		return nil, fmt.Errorf("open calendar '%s': %s", url, err)

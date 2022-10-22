@@ -82,6 +82,14 @@ var _ = Describe("Service", func() {
 			Expect(len(cal.Events())).To(BeNumerically(">=", 1))
 		})
 
+		It("will treat URLs without a scheme as file:// protocol URLs relative to the current working directory", func() {
+			relativePath := "../fake.ical"
+			cal, err := calendarSvc.OpenCalendar(relativePath)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(len(cal.Events())).To(BeNumerically(">=", 1))
+		})
+
 		It("can open HTTP urls", func() {
 			localHttpSrv := httptest.NewServer(http.FileServer(http.Dir("..")))
 			defer localHttpSrv.Close()
@@ -173,6 +181,19 @@ var _ = Describe("Service", func() {
 			_, err := calendarSvc.AddCalendar("file://not.a.thing", "display")
 
 			Expect(err).To(HaveOccurred())
+		})
+
+		It("will treat URLs without a scheme as file:// protocol URLs relative to the current working directory, and store them as absolute paths", func() {
+			relativePath := "../fake.ical"
+
+			calPath, err := fakeCalFilePath()
+			Expect(err).ToNot(HaveOccurred())
+
+			entry, err := calendarSvc.AddCalendar(relativePath, "display")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(entry.URL).To(Equal("file://" + calPath))
+			Expect(entry.Id).To(Equal(1))
 		})
 
 		It("will throw an error if the calendar URL doesn't provide a valid calendar", func() {
