@@ -4,3 +4,6 @@ release/
 **/fakes/
 *.sqlite
 *.ical
+*.gif
+!demo.gif
+*.cast

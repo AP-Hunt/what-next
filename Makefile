@@ -120,3 +120,20 @@ dist: $(GO_SRC) fakes ./vendor/ $(VENDOR_DIRS)
   	done; \
   	tar czf "${BIN_NAME}-${VERSION}.tar.gz" -C release/ .; \
   	mv "./${BIN_NAME}-${VERSION}.tar.gz" "./release/${BIN_NAME}-${VERSION}.tar.gz"
+
+# Demo targets
+demo.ical:
+	go run ./tools/demo-cal-generator > demo.ical
+
+check_demo_deps:
+	@if ! which asciinema >/dev/null; then echo "asciinema not found on your path"; fi
+	@if ! which agg >/dev/null; then echo "agg not found on your path"; fi
+	@if ! which pv >/dev/null; then echo "pv not found on your path. see https://www.ivarch.com/programs/pv.shtml"; fi
+
+.PHONY: record_demo
+record_demo: check_demo_deps demo.ical $OUT_PATH
+	WHAT_NEXT_DATA_DIR="$$(mktemp -d)" \
+	PATH="$${PWD}/bin:${PATH}" \
+	TERM="$${TERM:-xterm}" \
+	asciinema rec --stdin --overwrite --env="SHELL,TERM,WHAT_NEXT_DATA_DIR,PATH" -c "/bin/bash -l ${PWD}/scripts/demo.sh" "${PWD}/demo.cast"
+	agg --theme asciinema demo.cast demo.gif

@@ -1,0 +1,54 @@
+---
+on:
+  push: 
+    # Run on any other branch push
+    branches: 
+      - "*"
+    # Don't run on release tags
+    tags-ignore:
+      # Tags that look like a semantic version
+      - "[0-9]+.[0-9]+.[0-9]+*"
+
+    # Only run when relevant files have changed
+    paths:
+      - "**.go"
+      - "scripts/demo*"
+
+jobs:
+  update_demo:
+    name: "Update demo"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2 # Trusted creator
+      - uses: actions/setup-go@v2 # Trusted creator
+        with:
+          check-latest: true
+          go-version: "^1.19"
+
+      - name: "Install asciinemam pv"
+        run: |
+          echo "Installing asciinema"
+          sudo apt-get update
+          sudo apt-get install asciinema pv
+
+      - name: "Install agg"
+        run: |
+          sudo wget -q -O /usr/local/bin/agg "https://github.com/asciinema/agg/releases/download/v1.3.0/agg-x86_64-unknown-linux-gnu"
+          sudo chmod +x /usr/local/bin/agg
+
+      - name: "Generate demo gif"
+        run: |
+          make record_demo
+
+      - name: "Push demo gif change"
+        run: |
+          git config --global user.name "Andy Hunt via GitHub Actions"
+          git config --global user.email "github@andyhunt.me"
+          git add demo.gif
+
+          if git diff --name-status --cached | grep "demo.gif"; then
+            git commit -m "Update demo in response to commit ${GITHUB_SHA}"
+            git push
+          else
+            echo "Demo gif did not change, not committing anything"
+          fi
