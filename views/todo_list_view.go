@@ -52,9 +52,9 @@ func (v *TodoListView) Draw(out io.Writer) error {
 			if carbonDate.IsYesterday() {
 				due = "Yesterday"
 			} else if carbonDate.IsToday() {
-				due = "Today"
+				due = fmt.Sprintf("Today, %s", carbonDate.ToKitchenString())
 			} else if carbonDate.IsTomorrow() {
-				due = "Tomorrow"
+				due = fmt.Sprintf("Tomorrow, %s", carbonDate.ToKitchenString())
 			} else {
 				due = carbonDate.Format("dS M y H:i")
 			}
