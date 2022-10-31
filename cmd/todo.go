@@ -95,6 +95,15 @@ var TodoListCmd = &cobra.Command{
 			return err
 		}
 
+		time24Ago := time.Now().Add(-24 * time.Hour)
+		items = items.Filter(func(item *todo.TodoItem) bool {
+			if !item.Completed {
+				return true
+			}
+
+			return item.CompletedAt.After(time24Ago)
+		})
+
 		viewEngine := ctx.ViewEngine()
 		view := views.TodoListView{}
 		view.SetData(items)
