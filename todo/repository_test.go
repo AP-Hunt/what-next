@@ -106,7 +106,7 @@ var _ = Describe("Repository", func() {
 		addedItem.Duration = &duration
 
 		addedItem.Action = "updated"
-		addedItem.Completed = true
+		addedItem.Complete()
 
 		updatedItem, err := repo.Update(addedItem)
 
@@ -117,6 +117,8 @@ var _ = Describe("Repository", func() {
 		Expect(*updatedItem.DueDate).To(BeTemporally("==", dueDate))
 		Expect(int(*updatedItem.Duration)).To(BeNumerically("==", int(duration)))
 		Expect(updatedItem.Completed).To(BeTrue())
+        Expect(updatedItem.CompletedAt).ToNot(BeNil())
+        Expect(*updatedItem.CompletedAt).To(BeTemporally("~", time.Now(), 5 * time.Second))
 		Expect(updatedItem.Action).To(Equal("updated"))
 	})
 })

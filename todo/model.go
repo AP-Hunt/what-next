@@ -18,3 +18,10 @@ func (t *TodoItem) IsOverdue() bool {
 
 	return t.DueDate.Before(time.Now())
 }
+
+func (t *TodoItem) Complete() {
+	t.Completed = true
+
+	now := time.Now()
+	t.CompletedAt = &now
+}

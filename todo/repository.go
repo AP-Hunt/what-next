@@ -43,9 +43,9 @@ func (repo *TodoSQLRepository) Add(item TodoItem) (TodoItem, error) {
 			row := tx.QueryRowx(
 				`
 				INSERT INTO todo_items
-					(action, due_date, duration, completed)
+					(action, due_date, duration, completed, completed_at)
 				VALUES
-					(?, ?, ?, ?)
+					(?, ?, ?, ?, ?)
 		
 				RETURNING *
 				`,
@@ -53,6 +53,7 @@ func (repo *TodoSQLRepository) Add(item TodoItem) (TodoItem, error) {
 				item.DueDate,
 				duration,
 				item.Completed,
+				item.CompletedAt,
 			)
 
 			newItem := TodoItem{}
@@ -104,7 +105,8 @@ func (repo *TodoSQLRepository) Update(item TodoItem) (TodoItem, error) {
 						action = ?,
 						due_date = ?,
 						duration = ?,
-						completed = ?
+						completed = ?,
+                         completed_at = ?
 					WHERE 
 						id = ?
 
@@ -114,6 +116,7 @@ func (repo *TodoSQLRepository) Update(item TodoItem) (TodoItem, error) {
 				item.DueDate,
 				item.Duration,
 				item.Completed,
+				item.CompletedAt,
 				item.Id,
 			).StructScan(&updatedItem)
 

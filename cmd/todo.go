@@ -127,7 +127,7 @@ var TodoCompleteCmd = &cobra.Command{
 			return err
 		}
 
-		item.Completed = true
+		item.Complete()
 		updated, err := repo.Update(item)
 		if err != nil {
 			return err
